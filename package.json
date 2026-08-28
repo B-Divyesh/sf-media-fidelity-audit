@@ -7,14 +7,17 @@
     "dev": "vite --host 0.0.0.0",
     "build": "npm run build:site",
     "build:site": "vite build",
-    "test": "cargo test && node --test site/tests/license.test.mjs",
-    "test:browser": "node --test site/tests/accessibility.test.mjs",
-    "test:site": "node --test site/tests/*.test.mjs",
+    "test": "cargo test && npm run test:claims && npm run test:site && npm run test:browser",
+    "test:claims": "cargo build && npm run build:site && node --test --test-concurrency=1 site/tests/claims.test.mjs",
+    "test:browser": "npm run build:site && node --test --test-concurrency=1 site/tests/accessibility.test.mjs",
+    "test:site": "node --test site/tests/site.test.mjs",
+    "check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings && tsc --noEmit",
     "preview": "vite preview --host 0.0.0.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
-    "@playwright/test": "^1.58.2",
-    "vite": "6.1.0"
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.58.2",
+    "typescript": "5.9.2",
+    "vite": "8.2.2"
   }
 }

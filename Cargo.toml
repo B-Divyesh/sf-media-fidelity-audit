@@ -9,7 +9,7 @@ homepage = "https://media-fidelity-audit.sociobot.in"
 repository = "https://github.com/B-Divyesh/sf-media-fidelity-audit"
 keywords = ["backup", "photos", "archive", "fidelity"]
 categories = ["command-line-utilities", "multimedia"]
-include = ["src/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "CHANGELOG.md"]
+include = ["/src/**", "/examples/**", "/Cargo.toml", "/Cargo.lock", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [[bin]]
 name = "mfa"

@@ -1,0 +1,24 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f0e5; color: #1d2927; font: 17px/1.55 system-ui, sans-serif; }
+a { color: inherit; text-underline-offset: 4px; }
+.skip { position: absolute; top: -60px; left: 12px; background: #1d2927; color: white; padding: 12px; }
+.skip:focus { top: 12px; }
+.site-header, main, footer { max-width: 900px; margin: auto; padding: 24px; }
+.site-header, footer { display: flex; justify-content: space-between; gap: 24px; }
+.site-header a { min-height: 44px; display: flex; align-items: center; }
+main { min-height: 66vh; padding-top: 90px; }
+h1 { font: 700 clamp(44px, 7vw, 72px)/1.05 Georgia, serif; max-width: 650px; }
+.eyebrow { color: #9e3e2b; text-transform: uppercase; font-size: 13px; font-weight: 800; letter-spacing: .12em; }
+.button { display: inline-flex; align-items: center; min-height: 44px; background: #173b49; color: #fffaf1; padding: 10px 18px; text-decoration: none; }
+.thread { width: 180px; height: 80px; border-top: 8px solid #9e3e2b; border-radius: 50%; transform: rotate(-7deg); }
+a:focus-visible { outline: 3px solid #f4c95d; outline-offset: 2px; box-shadow: 0 0 0 6px #1d2927; }
+@media (prefers-color-scheme: dark) {
+  body { background: #17201f; color: #f8f0e2; }
+  .eyebrow { color: #f29a82; }
+  .thread { border-color: #f29a82; }
+}
+@media (max-width: 600px) {
+  .site-header, footer { display: block; }
+  .site-header nav { margin-top: 12px; }
+}

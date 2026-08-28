@@ -1,87 +1,115 @@
-# Media Fidelity Audit — handoff
+# Media Fidelity Audit — repair handoff
 
-## Independent verification status (2026-08-28): **FAIL**
+## Release status
 
-Candidate `beaf30cfca8dfc4a22fb4a5bda6eea2d743db6fa` was independently tested
-against https://media-fidelity-audit.sociobot.in. The live HTML, JS, CSS, and
-hero asset exactly match the candidate build, but it is **not releasable**.
+Release-blocking findings from verifier report commit
+`63570363d3aa394d1b4b91f7c24ab9ed315f9aa8` against candidate
+`beaf30cfca8dfc4a22fb4a5bda6eea2d743db6fa` are repaired. The artifact remains
+a Rust/clap single-binary CLI with a Vite static documentation site built to
+`dist/site/`.
 
-Release blockers:
+`.factory/brief.json` was not present in the supplied repository. The existing
+`.factory/design.md` remained the visual source of truth.
 
-* `.factory/claims.json` is absent, so the mandatory clean-demo claim tests do
-  not exist or run.
-* There is no one-click “Try it with sample data” flow, `mfa demo`, bundled
-  sample, isolated demo banner/reset, or `.factory/demo.md`.
-* `mfa audit --output archive/photo.jpg` overwrites that archive media file
-  with the manifest. This contradicts the read-only safety promise and can
-  destroy originals.
+## Finding-by-finding repair
 
-The detailed evidence, passing checks, browser/privacy/rate-limit results, and
-all defects are in `.factory/verification.md`. Do not use the earlier
-“Delivered” claims below as an acceptance result; they are superseded by this
-verification.
+* **Destructive output path:** output is resolved before any audit reads. It is
+  rejected when it exists or falls under either canonical input tree. Creation
+  uses `create_new`, preventing a race from replacing another file. Regression
+  tests preserve source/archive bytes and cover new in-tree and existing-file
+  outputs.
+* **Missing claims and demo:** `.factory/claims.json` lists seven retained
+  claims, each with one tagged sandbox test. `mfa demo` copies five bundled
+  samples into a unique temporary workspace and writes its manifest there.
+  `/demo` shows the same finished result with a persistent demo banner, reset,
+  and start-for-real actions. Details are in `.factory/demo.md`.
+* **Upper-case Live Photos:** pairing now compares still/motion stems and media
+  extensions without ASCII case sensitivity. A `LIVE.HEIC` + `LIVE.MOV`
+  regression and the bundled sample both prove it.
+* **Media observations:** valid JPEG/TIFF EXIF and ISO-BMFF MOV fixtures assert
+  orientation, camera, capture time, dimensions, codec, and 240 fps output.
+* **Unimplemented paid offer:** the Pro purchase, restore, and license code were
+  removed. No paid feature is advertised or sold.
+* **Unavailable install:** the site and README now use the working public
+  checkout plus `cargo install --path .`; they state that the crate is not yet
+  published.
+* **Lint:** `clippy::op_ref`, `too_many_arguments`, and follow-on warnings were
+  repaired; `npm run check` now runs format, Clippy with `-D warnings`, and
+  TypeScript checks.
+* **Focus and dark contrast:** focus has a gold inner ring plus dark keyline.
+  Axe sweeps cover light desktop, light 390 px, and dark 390 px across all
+  routes with no serious or critical findings.
+* **Site/deploy policy:** `/privacy`, `/terms`, `/demo`, and designed 404 pages
+  share the standard shell. Route titles/canonical metadata update in the SPA.
+  The site now includes CSP and other security headers, immutable hashed-asset
+  caching, `robots.txt`, `sitemap.xml`, favicon, touch icon, and 1200×630 social
+  art.
+* **Performance evidence:** the app reserves its pre-render height, removing
+  startup layout shift. Mobile Lighthouse now scores 100 in performance,
+  accessibility, best practices, and SEO.
 
-## Delivered
+## Verification evidence
 
-* `mfa`, a Rust/clap, read-only CLI at version 0.1.0. `mfa audit` recursively
-  compares source and archive files at their matching relative paths, computes
-  SHA-256 proofs, writes a versioned portable JSON manifest, emits scriptable
-  `--json`, and returns 0/1/2 for clean/differences/operational errors.
-* Local JPEG observations (dimensions, EXIF block hash, orientation, capture
-  date, make/model where present) and ISO-BMFF observations for MOV/MP4/HEIC
-  (brand, common codec marker, nominal fps where exposed). Changed hashes are
-  always decisive; metadata differences explain likely flattening.
-* Sidecar and same-stem HEIC/JPEG + MOV/MP4 Live Photo pairing recorded in the
-  manifest. The product does not upload, mutate, transcode, or auto-repair
-  media.
-* A Vite static landing/docs site in `site/`, built to `dist/site`, with an
-  accessible mobile layout, `/privacy`, `/terms`, and a one-time Pro purchase
-  / restore / daily verification flow using the Sociobot billing contract.
-  Core audit and JSON export remain free.
-* Paper-cut diorama visual system documented in `.factory/design.md`. The
-  original hero is `site/src/assets/archive-diorama.webp` (99 KB; built asset
-  101 KB). It was generated with `/opt/fleet/lib/gen-image.sh`, deployment
-  `factory-image`, 1024×1024/high, then WebP optimized. Prompt: “paper-cut
-  diorama of a family-photo archive proof check: layered handmade paper source
-  folder and deep navy archive box connected by an ochre thread, camera reel
-  and film strip; ivory craft-paper backdrop; no text, logos, people, or
-  watermark.” Full generation metadata is next to the asset in
-  `archive-diorama.png.json`.
-
-## Run and verify
+Clean local run on 2026-08-28:
 
 ```sh
-npm install
+npm ci
+npm audit --omit=dev
+npm run check
 npm test
-npm run build:site              # writes dist/site/index.html
-cargo run -- audit --source /path/to/export --archive /path/to/archive --output manifest.json
-npm run preview -- --port 4173
-npm run test:browser            # Playwright + axe, with preview running
-cargo package                   # ready-to-publish crate check
+npm run build
+cargo package --allow-dirty
 ```
 
-Verified locally:
+Results:
 
-* `cargo test`: 3 tests pass (manifest differences/missing, JPEG dimensions,
-  codec/fps metadata differences).
-* `npm test`: Rust tests plus 2 browser-license unit tests pass.
-* `npm run build:site`: passes. Production initial JS 2.80 KB, CSS 6.87 KB,
-  hero WebP 101.15 KB, total `dist/site` 128 KB.
-* `npm run test:browser`: Playwright axe reports zero serious/critical issues
-  at 390px. Factory `verify-url.sh` reports HTTP 200, 537 ms local load, zero
-  console errors, one h1, main landmark, language/title, image alt, and
-  labelled buttons all present.
-* `cargo package --allow-dirty`: passes; package is 193.6 KB unpacked.
+* `npm ci`: 24 packages installed; audit reports 0 vulnerabilities.
+* `npm run check`: Rust format, all-target Clippy `-D warnings`, and TypeScript
+  pass.
+* `npm test`: 9 Rust tests, 6 CLI claim tests, 3 site-policy tests, and browser
+  tests pass. Browser coverage includes desktop 1440×900, mobile 390×844,
+  light/dark contrast, keyboard Enter/Space, skip link, history/focus, reduced
+  motion, demo reset, and privacy storage/request interception.
+* All seven commands in `.factory/claims.json` select exactly their tagged
+  test. The CLI offline test denies `socket` and `connect` syscalls; the site
+  test observes only the preview origin and empty local/session/IndexedDB
+  storage with zero service workers.
+* `npm run build`: JS 9.53 kB (3.61 kB gzip), CSS 8.01 kB (2.73 kB gzip), hero
+  WebP 101.15 kB. Lighthouse transferred 108 KiB.
+* Mobile Lighthouse: performance 100, accessibility 100, best practices 100,
+  SEO 100; LCP 1.7 s; CLS 0.000. INP is unavailable because this short static
+  lab trace records no interaction.
+* `/opt/fleet/lib/verify-url.sh` on the local production build: HTTP 200, 603
+  ms load, zero console errors, title/lang, one H1, main, alt text, and labelled
+  buttons pass.
+* `cargo package`: 17 files, 48.9 KiB unpacked / 14.7 KiB compressed. A fresh
+  temporary Cargo root installed the `.crate`; its `mfa --help` and `mfa demo`
+  passed.
+* A release binary audited a 10,000-pair synthetic fixture and wrote a
+  4,810,239-byte manifest. Container overlay I/O took 10.9 s; no performance
+  promise is made from this environment.
 
-## Known gaps / next steps
+Evidence is in `.factory/evidence/local/`: `verify.json`, desktop/mobile
+screenshots, and the full `lighthouse.json`.
 
-* The ISO-BMFF parser intentionally reports common container markers without
-  depending on `ffprobe`; unusual/proprietary containers may have no codec/fps
-  observation, while the SHA-256 proof still works.
-* A Lighthouse CLI invocation could not attach to the container-provided
-  Chromium ("Unable to connect to Chrome"). The resource budgets, browser
-  console check, and axe run above passed; run Lighthouse in deployment CI for
-  final scored mobile metrics.
-* The Pro site flow is wired to the required product-slug endpoint; the factory
-  must register the product before checkout can be live. The CLI's documented
-  audit remains entirely usable without a license.
+## Run and deploy
+
+```sh
+cargo run -- demo
+cargo run -- audit --source /path/to/export --archive /path/to/archive \
+  --output /safe/new/manifest.json
+npm ci
+npm test
+npm run check
+npm run build
+npm run preview -- --port 4173
+cargo package
+/opt/fleet/lib/deploy-static.sh media-fidelity-audit dist/site
+```
+
+## Known boundary
+
+The built-in ISO-BMFF inspection deliberately recognizes common container
+markers without `ffprobe`. An unusual or proprietary container can lack codec
+or frame-rate observations, while SHA-256 remains decisive. Files renamed or
+rearranged between trees still require a staging layout with matching paths.

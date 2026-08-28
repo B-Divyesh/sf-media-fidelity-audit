@@ -1,0 +1,51 @@
+[
+  {
+    "id": "sample-demo",
+    "claim": "The bundled demo audits five files and reports three identical, one changed, one missing, and one Live Photo pair.",
+    "where": "landing preview, /demo, README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:sample-demo' site/tests/claims.test.mjs",
+    "sandbox": "fresh temporary directory; run target/debug/mfa demo; inspect its generated manifest"
+  },
+  {
+    "id": "read-only-safety",
+    "claim": "An audit never writes into or replaces a source or archive file.",
+    "where": "landing first screen, Privacy, README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:read-only-safety' site/tests/claims.test.mjs",
+    "sandbox": "fresh source and archive trees; attempt existing archive and new in-source outputs; compare SHA-256"
+  },
+  {
+    "id": "media-observations",
+    "claim": "The manifest records JPEG EXIF fields, MOV codec and frame rate, sidecars, and upper-case Live Photo pairs when present.",
+    "where": "landing checks, README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:media-observations' site/tests/claims.test.mjs",
+    "sandbox": "synthetic valid JPEG EXIF and ISO-BMFF fixtures plus upper-case HEIC/MOV fixture"
+  },
+  {
+    "id": "json-automation",
+    "claim": "The CLI emits JSON summaries and returns exit 0 for a clean audit, 1 for differences, and 2 for errors.",
+    "where": "README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:json-automation' site/tests/claims.test.mjs",
+    "sandbox": "fresh clean, missing-file, and invalid-input fixtures"
+  },
+  {
+    "id": "offline-local",
+    "claim": "The CLI needs no account or network connection.",
+    "where": "landing first screen, Privacy, README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:offline-local' site/tests/claims.test.mjs",
+    "sandbox": "run mfa demo with socket and connect syscalls denied by an LD_PRELOAD guard"
+  },
+  {
+    "id": "static-privacy",
+    "claim": "The static site sends no third-party requests and stores no browser data during the demo.",
+    "where": "Privacy, README",
+    "test": "npm run build:site && node --test --test-name-pattern='@claim:static-privacy' site/tests/accessibility.test.mjs",
+    "sandbox": "fresh browser context; capture requests and browser storage through the complete /demo flow"
+  },
+  {
+    "id": "mit-license",
+    "claim": "Media Fidelity Audit is free under the MIT License.",
+    "where": "landing first screen, Terms, README",
+    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:mit-license' site/tests/claims.test.mjs",
+    "sandbox": "fresh checkout; inspect the shipped LICENSE"
+  }
+]

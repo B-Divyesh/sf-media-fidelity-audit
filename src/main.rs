@@ -4,8 +4,8 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::{self, File},
-    io::Read,
+    fs::{self, File, OpenOptions},
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::ExitCode,
     time::{SystemTime, UNIX_EPOCH},
@@ -26,6 +26,8 @@ struct Cli {
 enum Command {
     /// Compare source media to the archive at matching relative paths.
     Audit(AuditArgs),
+    /// Run a safe audit on bundled sample media in a temporary directory.
+    Demo,
 }
 #[derive(Args, Debug)]
 struct AuditArgs {
@@ -126,15 +128,20 @@ fn main() -> ExitCode {
                 ExitCode::from(2)
             }
         },
+        Command::Demo => match run_demo() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("mfa: {e}");
+                ExitCode::from(2)
+            }
+        },
     }
 }
 
 fn run_audit(args: AuditArgs) -> Result<bool, String> {
     validate_dir(&args.source, "source")?;
     validate_dir(&args.archive, "archive")?;
-    if args.output.exists() && args.output.is_dir() {
-        return Err(format!("output is a directory: {}", args.output.display()));
-    }
+    let safe_output = validate_output(&args.output, &args.source, &args.archive)?;
     let files = collect_files(&args.source, args.include_all)?;
     let mut summary = Summary {
         source_files: files.len(),
@@ -241,8 +248,7 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
         live_photo_pairs,
     };
     let bytes = serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?;
-    fs::write(&args.output, bytes)
-        .map_err(|e| format!("cannot write {}: {e}", args.output.display()))?;
+    write_new_file(&safe_output, &bytes)?;
     if args.json {
         println!(
             "{}",
@@ -252,6 +258,116 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
         println!("Media Fidelity Audit\n  {} source files · {} identical · {} changed · {} missing · {} unreadable\n  manifest: {}", manifest.summary.source_files, manifest.summary.matched, manifest.summary.changed, manifest.summary.missing, manifest.summary.unreadable, args.output.display());
     }
     Ok(!manifest.summary.all_byte_identical)
+}
+
+fn validate_output(output: &Path, source: &Path, archive: &Path) -> Result<PathBuf, String> {
+    if output.exists() {
+        return Err(format!(
+            "output already exists; choose a new path: {}",
+            output.display()
+        ));
+    }
+    let file_name = output
+        .file_name()
+        .ok_or_else(|| format!("output must name a new file: {}", output.display()))?;
+    let parent = output
+        .parent()
+        .filter(|path| !path.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let parent = parent
+        .canonicalize()
+        .map_err(|e| format!("cannot resolve output directory {}: {e}", parent.display()))?;
+    let candidate = parent.join(file_name);
+    for (label, tree) in [("source", source), ("archive", archive)] {
+        let tree = tree
+            .canonicalize()
+            .map_err(|e| format!("cannot resolve {label} {}: {e}", tree.display()))?;
+        if candidate.starts_with(&tree) {
+            return Err(format!(
+                "output must be outside the {label} tree: {}",
+                output.display()
+            ));
+        }
+    }
+    Ok(candidate)
+}
+
+fn write_new_file(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(|e| format!("cannot create new output {}: {e}", path.display()))?;
+    if let Err(error) = file.write_all(bytes) {
+        drop(file);
+        let _ = fs::remove_file(path);
+        return Err(format!("cannot write {}: {error}", path.display()));
+    }
+    Ok(())
+}
+
+fn run_demo() -> Result<(), String> {
+    let root = std::env::temp_dir().join(format!("mfa-demo-{}-{}", std::process::id(), now()));
+    let source = root.join("sample-source");
+    let archive = root.join("sample-archive");
+    fs::create_dir_all(source.join("2025")).map_err(|e| e.to_string())?;
+    fs::create_dir_all(archive.join("2025")).map_err(|e| e.to_string())?;
+    for (relative, bytes) in [
+        (
+            "2025/birthday.jpg",
+            include_bytes!("../examples/source/2025/birthday.jpg").as_slice(),
+        ),
+        (
+            "2025/beach-live.HEIC",
+            include_bytes!("../examples/source/2025/beach-live.HEIC").as_slice(),
+        ),
+        (
+            "2025/beach-live.MOV",
+            include_bytes!("../examples/source/2025/beach-live.MOV").as_slice(),
+        ),
+        (
+            "2025/family.jpg",
+            include_bytes!("../examples/source/2025/family.jpg").as_slice(),
+        ),
+        (
+            "2025/family.xmp",
+            include_bytes!("../examples/source/2025/family.xmp").as_slice(),
+        ),
+    ] {
+        fs::write(source.join(relative), bytes).map_err(|e| e.to_string())?;
+    }
+    for (relative, bytes) in [
+        (
+            "2025/birthday.jpg",
+            include_bytes!("../examples/archive/2025/birthday.jpg").as_slice(),
+        ),
+        (
+            "2025/beach-live.HEIC",
+            include_bytes!("../examples/archive/2025/beach-live.HEIC").as_slice(),
+        ),
+        (
+            "2025/beach-live.MOV",
+            include_bytes!("../examples/archive/2025/beach-live.MOV").as_slice(),
+        ),
+        (
+            "2025/family.jpg",
+            include_bytes!("../examples/archive/2025/family.jpg").as_slice(),
+        ),
+    ] {
+        fs::write(archive.join(relative), bytes).map_err(|e| e.to_string())?;
+    }
+    let output = root.join("sample-manifest.json");
+    println!("Demo — bundled sample data; your media is never read or changed.");
+    let _differences = run_audit(AuditArgs {
+        source,
+        archive,
+        output,
+        json: false,
+        include_all: false,
+    })?;
+    println!("  demo workspace: {}", root.display());
+    println!("  delete this temporary folder when you are done reviewing it.");
+    Ok(())
 }
 
 fn validate_dir(path: &Path, label: &str) -> Result<(), String> {
@@ -393,7 +509,7 @@ fn metadata_notes(source: Option<&MediaInfo>, archive: Option<&MediaInfo>) -> Ve
 }
 
 fn jpeg_info(data: &[u8]) -> Option<MediaInfo> {
-    if data.len() < 4 || &data[..2] != [0xff, 0xd8] {
+    if data.len() < 4 || data[..2] != [0xff, 0xd8] {
         return None;
     }
     let mut i = 2;
@@ -472,15 +588,20 @@ fn tiff_u32(d: &[u8], o: usize, le: bool) -> Option<u32> {
         }
     })
 }
+#[derive(Default)]
+struct TiffFields {
+    orientation: Option<u16>,
+    date: Option<String>,
+    make: Option<String>,
+    model: Option<String>,
+}
+
 fn scan_tiff_ifd(
     d: &[u8],
     off: usize,
     le: bool,
     main: bool,
-    orient: &mut Option<u16>,
-    date: &mut Option<String>,
-    make: &mut Option<String>,
-    model: &mut Option<String>,
+    fields: &mut TiffFields,
 ) -> Option<usize> {
     let n = tiff_u16(d, off, le)? as usize;
     let mut exif = None;
@@ -503,7 +624,7 @@ fn scan_tiff_ifd(
             tiff_u32(d, x + 8, le)? as usize
         };
         if tag == 0x0112 && typ == 3 {
-            *orient = tiff_u16(d, pos, le)
+            fields.orientation = tiff_u16(d, pos, le)
         }
         if tag == 0x8769 && main {
             exif = tiff_u32(d, x + 8, le).map(|x| x as usize)
@@ -515,9 +636,9 @@ fn scan_tiff_ifd(
                 .to_owned();
             if !s.is_empty() {
                 match tag {
-                    0x010f => *make = Some(s),
-                    0x0110 => *model = Some(s),
-                    _ => *date = Some(s),
+                    0x010f => fields.make = Some(s),
+                    0x0110 => fields.model = Some(s),
+                    _ => fields.date = Some(s),
                 }
             }
         }
@@ -529,34 +650,16 @@ fn parse_tiff(d: &[u8]) -> (Option<u16>, Option<String>, Option<String>) {
         return (None, None, None);
     }
     let le = &d[..2] == b"II";
-    let (mut orient, mut date, mut make, mut model) = (None, None, None, None);
+    let mut fields = TiffFields::default();
     if let Some(first) = tiff_u32(d, 4, le) {
-        if let Some(exif) = scan_tiff_ifd(
-            d,
-            first as usize,
-            le,
-            true,
-            &mut orient,
-            &mut date,
-            &mut make,
-            &mut model,
-        ) {
-            let _ = scan_tiff_ifd(
-                d,
-                exif,
-                le,
-                false,
-                &mut orient,
-                &mut date,
-                &mut make,
-                &mut model,
-            );
+        if let Some(exif) = scan_tiff_ifd(d, first as usize, le, true, &mut fields) {
+            let _ = scan_tiff_ifd(d, exif, le, false, &mut fields);
         }
     }
     (
-        orient,
-        date,
-        match (make, model) {
+        fields.orientation,
+        fields.date,
+        match (fields.make, fields.model) {
             (Some(a), Some(b)) => Some(format!("{a} {b}")),
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
@@ -645,23 +748,29 @@ fn pair_live_photos(names: &BTreeSet<PathBuf>, assets: &[Asset]) -> Vec<LivePair
         if !matches!(ext(still).as_str(), "heic" | "heif" | "jpg" | "jpeg") {
             continue;
         };
-        for motion_ext in ["mov", "mp4"] {
-            let motion = still.with_extension(motion_ext);
-            if names.contains(&motion) {
-                let a = status.get(&slash(still));
-                let b = status.get(&slash(&motion));
-                let ok = matches!((a, b), (Some(Status::Identical), Some(Status::Identical)));
-                pairs.push(LivePair {
-                    still: slash(still),
-                    motion: slash(&motion),
-                    status: if ok {
-                        "both byte-identical".to_owned()
-                    } else {
-                        "pair needs attention".to_owned()
-                    },
-                });
-                break;
-            }
+        if let Some(motion) = names.iter().find(|candidate| {
+            candidate.parent() == still.parent()
+                && candidate
+                    .file_stem()
+                    .zip(still.file_stem())
+                    .is_some_and(|(a, b)| {
+                        a.to_string_lossy()
+                            .eq_ignore_ascii_case(&b.to_string_lossy())
+                    })
+                && matches!(ext(candidate).as_str(), "mov" | "mp4")
+        }) {
+            let a = status.get(&slash(still));
+            let b = status.get(&slash(motion));
+            let ok = matches!((a, b), (Some(Status::Identical), Some(Status::Identical)));
+            pairs.push(LivePair {
+                still: slash(still),
+                motion: slash(motion),
+                status: if ok {
+                    "both byte-identical".to_owned()
+                } else {
+                    "pair needs attention".to_owned()
+                },
+            });
         }
     }
     pairs
@@ -723,5 +832,146 @@ mod tests {
         b.fps = Some("30".into());
         let n = metadata_notes(Some(&a), Some(&b)).join(" ");
         assert!(n.contains("codec") && n.contains("frame rate"));
+    }
+
+    #[test]
+    fn output_cannot_replace_or_enter_either_media_tree() {
+        let d = tempdir().unwrap();
+        let source = d.path().join("source");
+        let archive = d.path().join("archive");
+        fs::create_dir_all(&source).unwrap();
+        fs::create_dir_all(&archive).unwrap();
+        fs::write(source.join("photo.jpg"), b"original source").unwrap();
+        fs::write(archive.join("photo.jpg"), b"original archive").unwrap();
+
+        for output in [source.join("new.json"), archive.join("photo.jpg")] {
+            let result = run_audit(AuditArgs {
+                source: source.clone(),
+                archive: archive.clone(),
+                output,
+                json: false,
+                include_all: false,
+            });
+            assert!(result.is_err());
+        }
+        assert_eq!(
+            fs::read(source.join("photo.jpg")).unwrap(),
+            b"original source"
+        );
+        assert_eq!(
+            fs::read(archive.join("photo.jpg")).unwrap(),
+            b"original archive"
+        );
+    }
+
+    #[test]
+    fn audit_refuses_to_replace_an_existing_manifest() {
+        let d = tempdir().unwrap();
+        let source = d.path().join("source");
+        let archive = d.path().join("archive");
+        fs::create_dir_all(&source).unwrap();
+        fs::create_dir_all(&archive).unwrap();
+        let output = d.path().join("manifest.json");
+        fs::write(&output, b"keep this").unwrap();
+        let result = run_audit(AuditArgs {
+            source,
+            archive,
+            output: output.clone(),
+            json: false,
+            include_all: false,
+        });
+        assert!(result.unwrap_err().contains("already exists"));
+        assert_eq!(fs::read(output).unwrap(), b"keep this");
+    }
+
+    #[test]
+    fn relative_output_resolves_from_the_current_directory() {
+        let d = tempdir().unwrap();
+        let source = d.path().join("source");
+        let archive = d.path().join("archive");
+        fs::create_dir_all(&source).unwrap();
+        fs::create_dir_all(&archive).unwrap();
+        let output = Path::new("unused-relative-manifest.json");
+        assert!(validate_output(output, &source, &archive)
+            .unwrap()
+            .ends_with(output));
+    }
+
+    #[test]
+    fn uppercase_live_photo_motion_is_paired() {
+        let d = tempdir().unwrap();
+        let source = d.path().join("source");
+        let archive = d.path().join("archive");
+        fs::create_dir_all(&source).unwrap();
+        fs::create_dir_all(&archive).unwrap();
+        for name in ["LIVE.HEIC", "LIVE.MOV"] {
+            fs::write(source.join(name), name.as_bytes()).unwrap();
+            fs::write(archive.join(name), name.as_bytes()).unwrap();
+        }
+        let output = d.path().join("manifest.json");
+        assert!(!run_audit(AuditArgs {
+            source,
+            archive,
+            output: output.clone(),
+            json: false,
+            include_all: false,
+        })
+        .unwrap());
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&fs::read(output).unwrap()).unwrap();
+        assert_eq!(manifest["summary"]["live_photo_pairs"], 1);
+        assert_eq!(manifest["live_photo_pairs"][0]["motion"], "LIVE.MOV");
+    }
+
+    #[test]
+    fn real_jpeg_fixture_reports_exif_fields() {
+        let mut tiff = vec![b'I', b'I', 42, 0, 8, 0, 0, 0, 4, 0];
+        tiff.extend_from_slice(&[0x12, 0x01, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0]);
+        tiff.extend_from_slice(&[0x0f, 0x01, 2, 0, 6, 0, 0, 0, 62, 0, 0, 0]);
+        tiff.extend_from_slice(&[0x10, 0x01, 2, 0, 5, 0, 0, 0, 68, 0, 0, 0]);
+        tiff.extend_from_slice(&[0x69, 0x87, 4, 0, 1, 0, 0, 0, 73, 0, 0, 0]);
+        tiff.extend_from_slice(&[0, 0, 0, 0]);
+        tiff.extend_from_slice(b"Nikon\0Z fc\0");
+        tiff.extend_from_slice(&[1, 0, 3, 0x90, 2, 0, 20, 0, 0, 0, 91, 0, 0, 0]);
+        tiff.extend_from_slice(&[0, 0, 0, 0]);
+        tiff.extend_from_slice(b"2025:08:28 10:11:12\0");
+        let mut payload = b"Exif\0\0".to_vec();
+        payload.extend_from_slice(&tiff);
+        let segment_len = (payload.len() + 2) as u16;
+        let mut jpeg = vec![0xff, 0xd8, 0xff, 0xe1];
+        jpeg.extend_from_slice(&segment_len.to_be_bytes());
+        jpeg.extend_from_slice(&payload);
+        jpeg.extend_from_slice(&[0xff, 0xc0, 0, 11, 8, 0, 2, 0, 3, 3, 1, 1, 0]);
+        jpeg.extend_from_slice(&[0xff, 0xd9]);
+
+        let info = jpeg_info(&jpeg).unwrap();
+        assert_eq!(info.orientation, Some(6));
+        assert_eq!(info.camera.as_deref(), Some("Nikon Z fc"));
+        assert_eq!(info.captured_at.as_deref(), Some("2025:08:28 10:11:12"));
+        assert_eq!((info.width, info.height), (Some(3), Some(2)));
+        assert!(info.exif_sha256.is_some());
+    }
+
+    #[test]
+    fn real_mov_fixture_reports_codec_and_frame_rate() {
+        fn media_box(name: &[u8; 4], body: &[u8]) -> Vec<u8> {
+            let mut value = ((body.len() + 8) as u32).to_be_bytes().to_vec();
+            value.extend_from_slice(name);
+            value.extend_from_slice(body);
+            value
+        }
+        let mut fixture = media_box(b"ftyp", b"qt  \0\0\0\0");
+        let mut mdhd = [0_u8; 16];
+        mdhd[12..16].copy_from_slice(&24_000_u32.to_be_bytes());
+        fixture.extend_from_slice(&media_box(b"mdhd", &mdhd));
+        let mut stts = [0_u8; 16];
+        stts[12..16].copy_from_slice(&100_u32.to_be_bytes());
+        fixture.extend_from_slice(&media_box(b"stts", &stts));
+        fixture.extend_from_slice(&media_box(b"free", b"hvc1"));
+
+        let info = inspect(&fixture, "mov").unwrap();
+        assert_eq!(info.format, "isobmff/qt  ");
+        assert_eq!(info.codec.as_deref(), Some("hvc1"));
+        assert_eq!(info.fps.as_deref(), Some("240"));
     }
 }
