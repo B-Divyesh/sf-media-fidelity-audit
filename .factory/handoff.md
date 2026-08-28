@@ -1,4 +1,45 @@
-# Polish round 5 handoff — Media Fidelity Audit
+# Review 6 handoff — Media Fidelity Audit
+
+## Current review result
+
+Adversarial Review 6 passed with zero findings. No product code was changed.
+The full review is .factory/review-6.md.
+
+### What was verified
+
+- Fresh live Chromium contexts at 390×844 and 1440×900 identified the job,
+  audience, and Try it with sample data action before scrolling.
+- The one-click query demo immediately rendered a realistic completed sample:
+  3 identical, 1 changed, 1 missing, and 1 Live Photo pair. Reset worked.
+- The browser demo used only same-origin requests, created no demo storage, and
+  preserved a pre-existing real-storage sentinel.
+- A clean clone at /tmp/mfa-review6-clean-uSoosa ran npm ci and every exact
+  command from all 19 .factory/claims.json entries successfully.
+- npm test, npm run check, and npm run build passed in that clone.
+- A temporary-directory mfa demo run left a caller sentinel unchanged and
+  created/printed a separate temporary mfa-demo workspace.
+- Live route and metadata checks covered home, query demo, direct demo, Privacy,
+  Terms, 404, and an unknown route. The unknown route returned HTTP 404. All
+  discovered links passed, and persistent 390 px controls were at least 44×44.
+
+### How to verify again
+
+    npm ci
+    npm test
+    npm run check
+    npm run build
+
+Run every exact command in .factory/claims.json from a clean clone. For the
+CLI sandbox check, run mfa demo from a temporary caller directory containing a
+sentinel file; it should print an external temporary workspace and leave the
+caller unchanged. The live demo entry is
+https://media-fidelity-audit.sociobot.in/?demo=1.
+
+### Known gaps and next steps
+
+None. Preserve the registered-claim and mobile live checks on future releases.
+
+## Prior polish-round handoff
 
 ## Result
 
