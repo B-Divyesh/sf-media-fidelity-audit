@@ -151,13 +151,13 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
             summary.sidecars += 1;
         }
         let source = prove(&source_path);
-        let (status, archive, mut observations) = match source {
+        let (status, archive, mut observations) = match &source {
             Err(message) => (
                 Status::Unreadable,
                 None,
                 vec![format!("Could not read source: {message}")],
             ),
-            Ok(_source_proof) if !archive_path.is_file() => (
+            Ok(_) if !archive_path.is_file() => (
                 Status::Missing,
                 None,
                 vec!["No file at the matching archive-relative path.".to_owned()],
@@ -199,8 +199,7 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
             Status::Missing => summary.missing += 1,
             Status::Unreadable => summary.unreadable += 1,
         }
-        // Ensure source proof remains available when an archive comparison succeeded.
-        let source_proof = prove(&source_path).ok();
+        let source_proof = source.ok();
         assets.push(Asset {
             relative_path: slash(&rel),
             kind,
@@ -337,12 +336,14 @@ fn prove(path: &Path) -> Result<FileProof, String> {
         bytes += n as u64;
         hasher.update(&buf[..n]);
     }
-    let sample = File::open(path).map_err(|e| e.to_string())?;
     let mut data = Vec::new();
-    sample
-        .take(8 * 1024 * 1024)
-        .read_to_end(&mut data)
-        .map_err(|e| e.to_string())?;
+    if matches!(kind_for(path), "image" | "video") {
+        let sample = File::open(path).map_err(|e| e.to_string())?;
+        sample
+            .take(2 * 1024 * 1024)
+            .read_to_end(&mut data)
+            .map_err(|e| e.to_string())?;
+    }
     Ok(FileProof {
         bytes,
         sha256: format!("{:x}", hasher.finalize()),
