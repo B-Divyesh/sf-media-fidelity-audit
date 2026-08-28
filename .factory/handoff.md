@@ -35,11 +35,12 @@ data consumed by the static page.
 
 ## Exact verification evidence
 
-A new clean clone at `/tmp/mfa-clean-7A29OJ/checkout` of commit `489a113` ran
+A final new clean clone at `/tmp/mfa-final-clean-oKAEh8/checkout` of commit
+`4ea43f59ee8f95d7e008d28f26e473986bc63700` ran
 `npm ci`, then every exact command from `.factory/claims.json`, followed by
 `npm run check`, `npm test`, `npm run build`, and `cargo package`. All passed.
 The package directory exists at
-`/tmp/mfa-clean-7A29OJ/checkout/target/package/media-fidelity-audit-0.1.0`.
+`/tmp/mfa-final-clean-oKAEh8/checkout/target/package/media-fidelity-audit-0.1.0`.
 
 Claim registry results (all pass):
 
@@ -57,8 +58,8 @@ Claim registry results (all pass):
 
 ## Deployment and live recheck
 
-Pushed repair documentation commit `a8c12059a5ca6317eb7cde13671d0033f7c3b3c8`
-to `origin/main`. Deployed `dist/site/` with
+Pushed the repair through `4ea43f59ee8f95d7e008d28f26e473986bc63700` to
+`origin/main`. Deployed `dist/site/` with
 `/opt/fleet/lib/deploy-static.sh media-fidelity-audit dist/site`; Azure Static
 Web Apps deployment id: `e0235633-296c-4f22-867e-6c449972fb49`.
 
