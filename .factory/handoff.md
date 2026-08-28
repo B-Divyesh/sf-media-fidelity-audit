@@ -1,84 +1,58 @@
-# Review round 3 handoff — Media Fidelity Audit
-
-## Review result
-
-No product code was changed. Independent review evidence is in
-`.factory/review-3.md`; the verdict is **FAIL** with one blocking and three
-minor findings. The blocking gap is the missing self-hosted terminal recording
-of the real CLI sample command on the landing page. The remaining findings are
-two non-informative section labels and an unregistered CLI-demo isolation
-promise.
-
-## Review verification
-
-* Fresh live Chromium contexts at 390×844 and 1440×900 confirmed the first
-  screen, one-click demo, reset, same-origin requests, empty browser storage,
-  routes, route metadata, link crawl, history/focus, and no console errors.
-* `mfa demo` from a fresh temporary working directory left that directory empty
-  and created a new `/tmp/mfa-demo-…` sample workspace.
-* Every one of the 16 exact `.factory/claims.json` commands passed in a fresh
-  clone at `/tmp/media-fidelity-audit-review3-zRTV0g`.
-* `npm test`, `npm run check`, and `npm run build` passed locally; `dist/site/`
-  was produced. An independent live browser/Axe sweep completed its desktop
-  portion but did not finish the later route sweep after five minutes, so its
-  test process was terminated. The local passing Axe suite is recorded above.
-
-## Previous implementation handoff
+# Polish round 3 handoff — Media Fidelity Audit
 
 ## Result
 
-All findings from `.factory/review-1.md` and `.factory/review-2.md` are closed.
-The Rust CLI remains the primary artifact, and the companion documentation and
-demo remain a static Vite site with the paper-cut archive identity.
+Repair commit `13224bad22a1f8a6449360128746ab734d31f9d8` closes every finding in
+`.factory/review-1.md`, `.factory/review-2.md`, and `.factory/review-3.md`.
+The Rust/clap CLI remains the primary artifact. The companion Vite static site
+keeps the paper-cut archive identity.
 
-The landing action now opens the isolated `?demo=1` sample in one click. The
-sample shows the real build-generated CLI result, keeps a persistent demo
-banner, resets without storage, and links to real installation steps. The
-remaining report copy now names the actual `SHA-256` field. `/demo` remains a
-shareable route with route-specific raw metadata.
-
-`.factory/copy-audit.md` is now generated from the rendered production routes
-and README. `npm run test:copy` fails on audit drift, missing required footer or
-README sentences, text over 22 words, banned words, or the removed
-“exact-match code” phrase. The claims gate also checks that each registered
-claim ID appears on exactly one test.
+The landing page now includes a self-hosted SVG terminal recording generated
+from a real `mfa demo` run during every site build. Its browser claim test loads
+the visible SVG and compares its command and normalized output with a fresh CLI
+run. The one-click `?demo=1` path remains isolated, with its persistent banner,
+reset action, and separate no-write CLI-demo isolation claim. The two vague
+landing labels now name the JSON audit report and the audit limits.
 
 ## Verification
 
-Clean clone: `/tmp/mfa-polish2-clean-eATda8` at `d51865b`.
+Fresh clone: `/tmp/mfa-polish3-clean-oD8js0` at `13224ba`.
 
-* All 16 exact `test` commands in `.factory/claims.json`: pass.
-* `npm test`: pass — 9 Rust tests, 14 CLI/supporting claim tests, 5 site-policy
-  tests, the generated copy gate, and 6 Playwright browser/Axe tests.
-* `npm run check`: pass — Rust format, Clippy with warnings denied, and
+* `npm ci` completed with zero vulnerabilities.
+* All 18 exact commands in `.factory/claims.json` passed. This includes
+  `cli-demo-recording` and `cli-demo-isolation`, plus all earlier 16 claims.
+* `npm test` passed: 9 Rust tests; 16 CLI/supporting tests; 6 site-policy
+  tests; copy audit; and 7 Playwright browser/Axe tests.
+* `npm run check` passed: Rust formatting, Clippy with warnings denied, and
   TypeScript.
-* `npm run build`: pass — `dist/site/` produced.
-* `cargo package`: pass — 17 files, 112.2 KiB unpacked and 60.5 KiB compressed.
-* Production bundle: 11.45 kB JS (4.29 kB gzip), 8.26 kB CSS (2.79 kB gzip),
-  and 101.15 kB hero WebP.
-* Live `SITE_URL=https://media-fidelity-audit.sociobot.in npm run test:browser`:
-  pass for desktop light, 390 px light, and 390 px dark across `/`,
-  `/?demo=1`, `/demo`, `/privacy`, `/terms`, `/404`, and an unknown route.
-* Playwright Axe 4.13: zero serious or critical violations on every tested
-  route and profile.
-* Live privacy: only same-origin requests; no localStorage, sessionStorage,
-  IndexedDB, or service worker state after the complete demo/reset flow.
-* Live unknown route: HTTP 404 with the designed common shell. Home, demo,
-  privacy, and terms return 200 with their own raw titles and canonicals.
-* Factory `verify-url.sh`: pass for `/`, `/?demo=1`, and `/demo`; title, `lang`,
-  one h1, main landmark, image alternatives, button names, and console are clean.
-* Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100,
-  SEO 100; FCP 0.9 s, LCP 1.4 s, TBT 10 ms, CLS 0.
+* `npm run build` produced `dist/site/`; `cargo package` passed (17 files,
+  112.3 KiB unpacked and 60.5 KiB compressed).
+* Production assets: JavaScript 12.19 kB (4.49 kB gzip), CSS 8.99 kB
+  (2.93 kB gzip), and original hero WebP 101.15 kB.
+* `SITE_URL=https://media-fidelity-audit.sociobot.in npm run test:browser`
+  passed. It covers `/`, `?demo=1`, `/demo`, `/privacy`, `/terms`, `/404`,
+  and an unknown 404 at desktop, 390px light, and 390px dark. Axe reported
+  zero serious or critical violations.
+* Factory `verify-url.sh` passed for `/`, `?demo=1`, `/demo`, `/privacy`, and
+  `/terms`: the expected route titles, `lang`, one `h1`, one main landmark,
+  image alternatives, button names, and no console errors.
+* Live metadata/link audit confirmed route-specific raw titles and canonicals
+  for `/demo`, `/privacy`, and `/terms`; every home same-origin link returned
+  200; `/not-a-real-route` returned the common-shell 404 with HTTP 404.
+* Lighthouse 12.6 mobile against the live URL: Performance 100,
+  Accessibility 100, Best Practices 100, SEO 100; FCP 0.9 s, LCP 1.5 s,
+  TBT 60 ms, CLS 0.
 
-Evidence is in `.factory/evidence/polish-2/`. The home and query-demo desktop
-and 390 px screenshots were inspected after a cold live load.
+Live evidence is committed in `.factory/evidence/polish-3/`, including cold
+desktop/mobile screenshots, route verifier reports, a 404 capture, and the
+Lighthouse JSON report.
 
 ## Deployment
 
-Pushed implementation commit `d51865b36a1897e5e78f60a7f72fa0f68bf76733`
-to `main`. Deployed `dist/site/` through `/opt/fleet/lib/deploy-static.sh` for
-work order `media-fidelity-audit-polish-2`; Azure deployment ID
-`ba276f2f-027c-43fb-80d9-022208ade5f6` succeeded. The live URL is
+Pushed `13224ba` to `main`. Deployed `dist/site/` via
+`/opt/fleet/lib/deploy-static.sh` for work order
+`media-fidelity-audit-polish-3`. Azure Static Web Apps deployment
+`8629c7eb-dba0-4bed-b5d7-fc3d9d49f55a` succeeded. The live URL is
 <https://media-fidelity-audit.sociobot.in>.
 
 ## Run locally
@@ -91,10 +65,10 @@ npm run build
 cargo package
 ```
 
-Regenerate the copy record after visitor-copy changes with
-`npm run audit:copy`, then commit the updated `.factory/copy-audit.md`.
+Run `cargo run -- demo` for the isolated CLI sample or open
+<https://media-fidelity-audit.sociobot.in/?demo=1> for the isolated web sample.
 
 ## Known gaps and next steps
 
-None for the reviewed scope. Registry publishing remains a factory release
-step and was not performed from this repair work order.
+None for the reviewed product scope. Registry publication remains a factory
+release step; do not publish from this repository.

@@ -1,0 +1,14 @@
+{
+  "url": "https://media-fidelity-audit.sociobot.in/privacy",
+  "loadMs": 575,
+  "errors": [],
+  "a11y": {
+    "title": "Privacy — Media Fidelity Audit",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 509
+  }
+}
