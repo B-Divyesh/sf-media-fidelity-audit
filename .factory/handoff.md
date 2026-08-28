@@ -1,3 +1,48 @@
+# Media Fidelity Audit — adversarial review 1 handoff
+
+## Result
+
+**FAIL.** The complete report is `.factory/review-1.md`, committed by the
+reviewer. Product code was not modified.
+
+The live 390 px and desktop first screens are clear about the job, audience,
+and first action. The one-click route, reset, storage isolation, offline CLI
+demo, routing, link crawl, keyboard behavior, reduced motion, and live Axe
+checks work. All seven exact claim commands and the full check/test/build/package
+gates pass from a clean clone.
+
+Release remains blocked because bundled media files are plain text with media
+extensions, the documented Rust 1.78 minimum fails against the lockfile, public
+claims are missing from `.factory/claims.json`, and several registered tests do
+not cover their full wording. Minor copy, metadata, 404-shell, external-link,
+and missed-leverage findings are also recorded.
+
+## Verification commands
+
+```sh
+npm ci
+npm run check
+npm test
+npm run build
+cargo package
+SITE_URL=https://media-fidelity-audit.sociobot.in npm run test:browser
+rustup toolchain install 1.78.0 --profile minimal
+cargo +1.78.0 check --locked
+```
+
+The last command is expected to fail on the reviewed candidate and is the
+evidence for F-1-2. Each exact claim command is copied in
+`.factory/claims.json`; all seven passed after `npm ci`.
+
+## What remains
+
+Resolve F-1-1 through F-1-24 in `.factory/review-1.md`, then repeat the entire
+first-read, copy, demo, claims, history, structure, accessibility, privacy, and
+missed-leverage checklist. Do not treat the passing declared suite as release
+acceptance until the unlisted and under-tested claims are closed.
+
+---
+
 # Media Fidelity Audit — independent verification 2
 
 ## Release status
