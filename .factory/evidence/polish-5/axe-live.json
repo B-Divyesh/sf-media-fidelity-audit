@@ -1,0 +1,86 @@
+[
+  {
+    "path": "/",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/?demo=1",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/demo",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/privacy",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/terms",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/404",
+    "width": 390,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/not-a-real-route",
+    "width": 390,
+    "status": 404,
+    "violations": []
+  },
+  {
+    "path": "/",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/?demo=1",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/demo",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/privacy",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/terms",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/404",
+    "width": 1440,
+    "status": 200,
+    "violations": []
+  },
+  {
+    "path": "/not-a-real-route",
+    "width": 1440,
+    "status": 404,
+    "violations": []
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "url": "https://media-fidelity-audit.sociobot.in/",
+  "loadMs": 803,
+  "errors": [],
+  "a11y": {
+    "title": "Media Fidelity Audit — check a media archive",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 2201
+  }
+}

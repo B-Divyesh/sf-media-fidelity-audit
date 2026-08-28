@@ -1,51 +1,85 @@
-# Review 5 handoff — Media Fidelity Audit
+# Polish round 5 handoff — Media Fidelity Audit
 
 ## Result
 
-Adversarial first-read Review 5 is complete at candidate `038a492` and records
-a **FAIL** in `.factory/review-5.md`. Product code was not modified.
+All findings from Reviews 1–5 are closed. The CLI remains a Rust single binary,
+and the documentation/demo remains a static Vite site with the existing
+paper-cut archive identity.
 
-The cold mobile and desktop first screens are clear, the demo is immediately
-useful and isolated, all 18 registered claims pass, and the live site passes
-its route, metadata, link, Axe, privacy, build, and CLI checks. Five findings
-remain: one blocking recurrence and four minor issues.
+The repair is live at <https://media-fidelity-audit.sociobot.in>.
 
-## Findings left for the repair round
+- Implementation: `357618f03c13f6a98af12273e3511a5cc7a0955e`
+- Final test stabilization: `73df9b1f94043dcb77df98ceef674a5b1bd9f8e4`
+- Static deployment: `ee8efa7a-fd87-42c8-8256-16f16364d3ce`
 
-- `F-4-1` (BLOCKING recurrence): live 390 px header links **Demo** and
-  **Limits** are narrower than 44 px; the regression selector omits header nav
-  links.
-- `F-5-1`: browser Back restores `/#limits` scroll but leaves focus on BODY.
-- `F-5-2`: the README `dist/site/` build-output claim has no claims entry.
-- `F-5-3`: demo h2 “Run it yourself” is context-free.
-- `F-5-4`: 404 copy retains the “archive path” metaphor and an unlisted
-  “media has not been touched” reassurance.
+## What changed
 
-## Verification performed
+- Every header and footer navigation target now measures at least 44×44 px on
+  390 px screens, including the static 404 shell.
+- Back and Forward preserve the restored section scroll and focus the new page
+  heading after rendering.
+- `.factory/claims.json` now owns the README build-output promise through
+  `@claim:build-output`, which verifies the complete production artifact.
+- The demo heading now says “Run the sample audit locally.”
+- Both 404 render paths now say “This page was not found” and give a direct
+  address/home recovery step.
+- The catalog description is verb-first and 75 characters long.
+- The generated copy audit and regression tests cover the new wording.
 
-- Fresh clone: `/tmp/mfa-review5-clean-QZ5zyS` at `038a492`.
-- Every exact command in `.factory/claims.json`: **18 passed, 0 failed**.
-- `npm test`: passed (9 Rust tests, 16 CLI/support tests, 7 site-policy tests,
-  generated copy audit, and 8 Playwright/Axe tests).
-- `npm run check`: passed.
+## Clean-clone evidence
+
+Final clean clone: `/tmp/mfa-polish5-final-nKX9DR` at
+`73df9b1f94043dcb77df98ceef674a5b1bd9f8e4`.
+
+- Every exact command for all 19 entries in `.factory/claims.json`: passed.
+- `npm test`: passed — 9 Rust tests, 16 CLI/support tests, 9 site-policy tests,
+  generated copy audit, and 8 Playwright/Axe browser tests.
+- `npm run check`: passed Rust format, Clippy with warnings denied, and
+  TypeScript.
 - `npm run build`: passed and produced `dist/site/`.
-- `cargo package`: passed (17 files, 112.3 KiB unpacked, 60.5 KiB compressed).
+- `cargo package`: passed; 17 files, 112.3 KiB unpacked and 60.5 KiB compressed.
+
+Run the same verification with:
+
+```sh
+npm ci
+jq -r '.[].test' .factory/claims.json
+npm test
+npm run check
+npm run build
+cargo package
+```
+
+Run each printed claim command from the repository root.
+
+## Live evidence
+
 - `SITE_URL=https://media-fidelity-audit.sociobot.in npm run test:browser`:
-  passed all 8 existing tests.
+  8 passed, 0 failed after deployment.
 - Factory `verify-url.sh`: passed `/`, `/?demo=1`, `/demo`, `/privacy`,
-  `/terms`, and `/404`; evidence is in `/tmp/mfa-review5-verify-E47lsA`.
-- Independent Axe sweep: zero violations on every route at 390 px and 1440 px.
-- Link crawl: all intended links returned 200; the deliberate unknown route
-  returned the expected HTTP 404.
-- Manual CLI demo from a temporary caller directory returned 0, preserved a
-  caller-media sentinel, printed an external temporary workspace, and created
-  the expected manifest/sample files.
-- Manual browser request/storage capture found only same-origin requests and no
-  new browser storage; a pre-existing sentinel remained unchanged.
+  `/terms`, and `/404`; each had the expected title, `lang`, one h1, main,
+  labelled controls, alt text, and zero console errors.
+- Independent Playwright Axe sweep: zero violations over seven routes at
+  390×844 and 1440×900; see
+  `.factory/evidence/polish-5/axe-live.json`.
+- The unknown route returned HTTP 404 with h1 “This page was not found.”; see
+  `.factory/evidence/polish-5/live-unknown-404/`.
+- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100,
+  SEO 100, LCP 1.5 s, total blocking time 10 ms, CLS 0; see
+  `.factory/evidence/polish-5/lighthouse-live.json`.
+- Production assets: JavaScript 12,256 bytes uncompressed (4.49 kB gzip), CSS
+  9,200 bytes uncompressed (2.94 kB gzip), hero WebP 101,150 bytes.
 
-## Recommended next steps
+Route screenshots and verifier output are in:
 
-Repair the five findings without weakening the passing claim suite. Extend the
-touch-target and history tests so they reproduce the two live failures, add or
-remove the unlisted claim, update the two headings, then repeat the complete
-Review 5 checklist from a fresh clone and fresh browser contexts.
+- `.factory/evidence/polish-5/live-home/`
+- `.factory/evidence/polish-5/live-demo-query/`
+- `.factory/evidence/polish-5/live-demo-route/`
+- `.factory/evidence/polish-5/live-privacy/`
+- `.factory/evidence/polish-5/live-terms/`
+- `.factory/evidence/polish-5/live-404/`
+- `.factory/evidence/polish-5/live-unknown-404/`
+
+## Known gaps and next steps
+
+None. No review finding or required verification item remains open.
