@@ -1,4 +1,29 @@
-# Polish round 2 handoff — Media Fidelity Audit
+# Review round 3 handoff — Media Fidelity Audit
+
+## Review result
+
+No product code was changed. Independent review evidence is in
+`.factory/review-3.md`; the verdict is **FAIL** with one blocking and three
+minor findings. The blocking gap is the missing self-hosted terminal recording
+of the real CLI sample command on the landing page. The remaining findings are
+two non-informative section labels and an unregistered CLI-demo isolation
+promise.
+
+## Review verification
+
+* Fresh live Chromium contexts at 390×844 and 1440×900 confirmed the first
+  screen, one-click demo, reset, same-origin requests, empty browser storage,
+  routes, route metadata, link crawl, history/focus, and no console errors.
+* `mfa demo` from a fresh temporary working directory left that directory empty
+  and created a new `/tmp/mfa-demo-…` sample workspace.
+* Every one of the 16 exact `.factory/claims.json` commands passed in a fresh
+  clone at `/tmp/media-fidelity-audit-review3-zRTV0g`.
+* `npm test`, `npm run check`, and `npm run build` passed locally; `dist/site/`
+  was produced. An independent live browser/Axe sweep completed its desktop
+  portion but did not finish the later route sweep after five minutes, so its
+  test process was terminated. The local passing Axe suite is recorded above.
+
+## Previous implementation handoff
 
 ## Result
 
