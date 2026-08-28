@@ -13,7 +13,7 @@ handoff. Live screenshots and URL checks are recorded after deployment in
 | F-1-3 | Added independent changed/missing/unreadable/archive-only classification test. | `@claim:archive-comparison` |
 | F-1-4 | Registered and browser-tested the first-screen one-click demo. | `@claim:one-click-demo` |
 | F-1-5 | Added independently calculated hash, byte count, status, path, and media-detail manifest test. | `@claim:manifest-content` |
-| F-1-6 | Added a sibling sentinel-media scope test and narrowed privacy copy to media content. | `@claim:read-scope` |
+| F-1-6 | Added LD_PRELOAD file-access tracing for both chosen files and an unaccessed sibling sentinel. | `@claim:read-scope` |
 | F-1-7 | Added visually unchanged byte-different JPEG evidence and kept the explicit limit. | `@claim:byte-not-perceptual` |
 | F-1-8 | Added nested/case path evidence and documented default matching. | `@claim:relative-path-matching` |
 | F-1-9 | Removed transient registry language and clean-installs the public checkout. | `@claim:source-install` |
