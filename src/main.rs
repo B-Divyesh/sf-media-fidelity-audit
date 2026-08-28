@@ -46,6 +46,9 @@ struct AuditArgs {
     /// Include non-media files too
     #[arg(long)]
     include_all: bool,
+    /// Find byte-identical archive files stored at a different relative path
+    #[arg(long)]
+    find_moved: bool,
 }
 
 #[derive(Serialize, Debug)]
@@ -66,6 +69,8 @@ struct Summary {
     changed: usize,
     missing: usize,
     unreadable: usize,
+    moved: usize,
+    archive_only: usize,
     sidecars: usize,
     live_photo_pairs: usize,
     all_byte_identical: bool,
@@ -86,6 +91,8 @@ enum Status {
     Changed,
     Missing,
     Unreadable,
+    Moved,
+    ArchiveOnly,
 }
 #[derive(Serialize, Debug)]
 struct FileProof {
@@ -143,6 +150,21 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
     validate_dir(&args.archive, "archive")?;
     let safe_output = validate_output(&args.output, &args.source, &args.archive)?;
     let files = collect_files(&args.source, args.include_all)?;
+    let archive_files = collect_files(&args.archive, args.include_all)?;
+    let moved_index = if args.find_moved {
+        let mut index: BTreeMap<String, Vec<PathBuf>> = BTreeMap::new();
+        for relative in &archive_files {
+            if let Ok(proof) = prove(&args.archive.join(relative)) {
+                index
+                    .entry(proof.sha256)
+                    .or_default()
+                    .push(relative.clone());
+            }
+        }
+        index
+    } else {
+        BTreeMap::new()
+    };
     let mut summary = Summary {
         source_files: files.len(),
         ..Default::default()
@@ -164,11 +186,40 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
                 None,
                 vec![format!("Could not read source: {message}")],
             ),
-            Ok(_) if !archive_path.is_file() => (
-                Status::Missing,
-                None,
-                vec!["No file at the matching archive-relative path.".to_owned()],
-            ),
+            Ok(source_proof) if !archive_path.is_file() => {
+                if archive_path.exists() {
+                    (
+                        Status::Unreadable,
+                        None,
+                        vec!["The matching archive path is not a readable file.".to_owned()],
+                    )
+                } else if let Some(found) = moved_index
+                    .get(&source_proof.sha256)
+                    .and_then(|matches| matches.iter().find(|candidate| *candidate != &rel))
+                {
+                    let found_path = args.archive.join(found);
+                    let proof = prove(&found_path).map_err(|message| {
+                        format!(
+                            "cannot read moved archive candidate {}: {message}",
+                            found_path.display()
+                        )
+                    })?;
+                    (
+                        Status::Moved,
+                        Some(proof),
+                        vec![format!(
+                            "Byte-identical archive file found at a different path: {}.",
+                            slash(found)
+                        )],
+                    )
+                } else {
+                    (
+                        Status::Missing,
+                        None,
+                        vec!["No file at the matching archive-relative path.".to_owned()],
+                    )
+                }
+            }
             Ok(source_proof) => match prove(&archive_path) {
                 Err(message) => (
                     Status::Unreadable,
@@ -205,6 +256,10 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
             Status::Changed => summary.changed += 1,
             Status::Missing => summary.missing += 1,
             Status::Unreadable => summary.unreadable += 1,
+            Status::Moved => summary.moved += 1,
+            Status::ArchiveOnly => {
+                unreachable!("archive-only entries are appended after source files")
+            }
         }
         let source_proof = source.ok();
         assets.push(Asset {
@@ -219,10 +274,31 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
             },
         });
     }
+    let source_names: BTreeSet<PathBuf> = names.clone();
+    for relative in archive_files
+        .into_iter()
+        .filter(|relative| !source_names.contains(relative))
+    {
+        let archive_path = args.archive.join(&relative);
+        let archive = prove(&archive_path).ok();
+        assets.push(Asset {
+            relative_path: slash(&relative),
+            kind: kind_for(&relative).to_owned(),
+            status: Status::ArchiveOnly,
+            source: None,
+            archive,
+            observations: vec![
+                "Present only in the archive; no source file uses this relative path.".to_owned(),
+            ],
+        });
+        summary.archive_only += 1;
+    }
     let live_photo_pairs = pair_live_photos(&names, &assets);
     summary.live_photo_pairs = live_photo_pairs.len();
-    summary.all_byte_identical =
-        summary.changed == 0 && summary.missing == 0 && summary.unreadable == 0;
+    summary.all_byte_identical = summary.changed == 0
+        && summary.missing == 0
+        && summary.unreadable == 0
+        && summary.moved == 0;
     let manifest = Manifest {
         schema: "media-fidelity-audit/v1".to_owned(),
         generated_at: now(),
@@ -255,7 +331,7 @@ fn run_audit(args: AuditArgs) -> Result<bool, String> {
             serde_json::to_string_pretty(&manifest.summary).map_err(|e| e.to_string())?
         );
     } else {
-        println!("Media Fidelity Audit\n  {} source files · {} identical · {} changed · {} missing · {} unreadable\n  manifest: {}", manifest.summary.source_files, manifest.summary.matched, manifest.summary.changed, manifest.summary.missing, manifest.summary.unreadable, args.output.display());
+        println!("Media Fidelity Audit\n  {} source files · {} identical · {} changed · {} missing · {} moved · {} archive-only · {} unreadable\n  manifest: {}", manifest.summary.source_files, manifest.summary.matched, manifest.summary.changed, manifest.summary.missing, manifest.summary.moved, manifest.summary.archive_only, manifest.summary.unreadable, args.output.display());
     }
     Ok(!manifest.summary.all_byte_identical)
 }
@@ -364,6 +440,7 @@ fn run_demo() -> Result<(), String> {
         output,
         json: false,
         include_all: false,
+        find_moved: false,
     })?;
     println!("  demo workspace: {}", root.display());
     println!("  delete this temporary folder when you are done reviewing it.");
@@ -798,7 +875,8 @@ mod tests {
             archive: a,
             output: out.clone(),
             json: true,
-            include_all: false
+            include_all: false,
+            find_moved: false
         })
         .unwrap());
         let m: serde_json::Value = serde_json::from_slice(&fs::read(out).unwrap()).unwrap();
@@ -851,6 +929,7 @@ mod tests {
                 output,
                 json: false,
                 include_all: false,
+                find_moved: false,
             });
             assert!(result.is_err());
         }
@@ -879,6 +958,7 @@ mod tests {
             output: output.clone(),
             json: false,
             include_all: false,
+            find_moved: false,
         });
         assert!(result.unwrap_err().contains("already exists"));
         assert_eq!(fs::read(output).unwrap(), b"keep this");
@@ -915,6 +995,7 @@ mod tests {
             output: output.clone(),
             json: false,
             include_all: false,
+            find_moved: false,
         })
         .unwrap());
         let manifest: serde_json::Value =

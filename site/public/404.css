@@ -7,6 +7,9 @@ a { color: inherit; text-underline-offset: 4px; }
 .site-header, main, footer { max-width: 900px; margin: auto; padding: 24px; }
 .site-header, footer { display: flex; justify-content: space-between; gap: 24px; }
 .site-header a { min-height: 44px; display: flex; align-items: center; }
+.wordmark { font-weight: 800; letter-spacing: .06em; text-decoration: none; }
+.wordmark span { font-weight: 500; letter-spacing: 0; margin-left: 8px; }
+.site-header nav { display: flex; gap: 16px; font-size: 14px; }
 main { min-height: 66vh; padding-top: 90px; }
 h1 { font: 700 clamp(44px, 7vw, 72px)/1.05 Georgia, serif; max-width: 650px; }
 .eyebrow { color: #9e3e2b; text-transform: uppercase; font-size: 13px; font-weight: 800; letter-spacing: .12em; }
@@ -21,4 +24,6 @@ a:focus-visible { outline: 3px solid #f4c95d; outline-offset: 2px; box-shadow: 0
 @media (max-width: 600px) {
   .site-header, footer { display: block; }
   .site-header nav { margin-top: 12px; }
+  footer p:last-child { margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .wordmark span { display: none; }
 }

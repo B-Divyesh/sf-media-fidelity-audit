@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "npm run build:site",
-    "build:site": "vite build",
+    "build:site": "npm run generate:demo && vite build",
+    "generate:demo": "cargo build && node site/scripts/generate-demo.mjs",
     "test": "cargo test && npm run test:claims && npm run test:site && npm run test:browser",
     "test:claims": "cargo build && npm run build:site && node --test --test-concurrency=1 site/tests/claims.test.mjs",
     "test:browser": "npm run build:site && node --test --test-concurrency=1 site/tests/accessibility.test.mjs",

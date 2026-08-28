@@ -10,7 +10,9 @@ temporary directory. It copies only the bundled files from `examples/` into
 `sample-source/` and `sample-archive/`, then writes `sample-manifest.json`
 beside those folders. It never reads a user-selected directory in demo mode.
 
-The sample represents a small 2025 family archive:
+The sample represents a small 2025 family archive. Its JPEG has original local
+camera metadata; its MOV and HEIC files are valid ISO-BMFF media generated for
+this repository; its XMP is a small original edit sidecar:
 
 * `birthday.jpg` is identical.
 * `beach-live.HEIC` and `beach-live.MOV` are identical and form one Live Photo.
@@ -19,4 +21,6 @@ The sample represents a small 2025 family archive:
 
 Each CLI run gets a separate temporary path. The terminal prints that path so
 the user can inspect or delete it. The website stores no state; **Reset demo**
-re-renders the bundled result, and **Start for real** opens install directions.
+re-renders the bundled result, and **View install steps** opens the local
+installation directions. `?demo=1` is also accepted by the landing route and
+redirects into the same isolated `/demo` view.

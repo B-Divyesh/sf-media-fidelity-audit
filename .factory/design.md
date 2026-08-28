@@ -47,3 +47,13 @@ The favicon is a hand-drawn SVG derived from the folder-and-thread language.
 `apple-touch-icon.png` is a local crop of the original diorama. `og-image.jpg`
 is a local 1200×630 composition made from that diorama with ImageMagick; no new
 third-party material was introduced.
+
+## Demo media provenance
+
+The five files in `examples/` are original local fixtures, not downloaded media
+or renamed text files. `birthday.jpg` and `family.jpg` were drawn with
+ImageMagick from the product palette; `birthday.jpg` carries locally written
+EXIF camera fields. The one-second `beach-live.MOV` and one-frame ISO-BMFF
+`beach-live.HEIC` were generated locally with FFmpeg, and `family.xmp` is an
+original small sidecar. They exist to exercise signatures and the product's
+metadata parser without depicting people or using third-party imagery.

@@ -2,6 +2,7 @@
 name = "media-fidelity-audit"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.85"
 description = "Read-only proof that archived media preserves source bytes and key metadata"
 license = "MIT"
 readme = "README.md"

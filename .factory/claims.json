@@ -1,51 +1,18 @@
 [
-  {
-    "id": "sample-demo",
-    "claim": "The bundled demo audits five files and reports three identical, one changed, one missing, and one Live Photo pair.",
-    "where": "landing preview, /demo, README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:sample-demo' site/tests/claims.test.mjs",
-    "sandbox": "fresh temporary directory; run target/debug/mfa demo; inspect its generated manifest"
-  },
-  {
-    "id": "read-only-safety",
-    "claim": "An audit never writes into or replaces a source or archive file.",
-    "where": "landing first screen, Privacy, README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:read-only-safety' site/tests/claims.test.mjs",
-    "sandbox": "fresh source and archive trees; attempt existing archive and new in-source outputs; compare SHA-256"
-  },
-  {
-    "id": "media-observations",
-    "claim": "The manifest records JPEG EXIF fields, MOV codec and frame rate, sidecars, and upper-case Live Photo pairs when present.",
-    "where": "landing checks, README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:media-observations' site/tests/claims.test.mjs",
-    "sandbox": "synthetic valid JPEG EXIF and ISO-BMFF fixtures plus upper-case HEIC/MOV fixture"
-  },
-  {
-    "id": "json-automation",
-    "claim": "The CLI emits JSON summaries and returns exit 0 for a clean audit, 1 for differences, and 2 for errors.",
-    "where": "README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:json-automation' site/tests/claims.test.mjs",
-    "sandbox": "fresh clean, missing-file, and invalid-input fixtures"
-  },
-  {
-    "id": "offline-local",
-    "claim": "The CLI needs no account or network connection.",
-    "where": "landing first screen, Privacy, README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:offline-local' site/tests/claims.test.mjs",
-    "sandbox": "run mfa demo with socket and connect syscalls denied by an LD_PRELOAD guard"
-  },
-  {
-    "id": "static-privacy",
-    "claim": "The static site sends no third-party requests and stores no browser data during the demo.",
-    "where": "Privacy, README",
-    "test": "npm run build:site && node --test --test-name-pattern='@claim:static-privacy' site/tests/accessibility.test.mjs",
-    "sandbox": "fresh browser context; capture requests and browser storage through the complete /demo flow"
-  },
-  {
-    "id": "mit-license",
-    "claim": "Media Fidelity Audit is free under the MIT License.",
-    "where": "landing first screen, Terms, README",
-    "test": "cargo build && npm run build:site && node --test --test-name-pattern='@claim:mit-license' site/tests/claims.test.mjs",
-    "sandbox": "fresh checkout; inspect the shipped LICENSE"
-  }
+  {"id":"sample-demo","claim":"The bundled demo uses valid JPEG, MOV, HEIC, and XMP files and reports three identical, one changed, one missing, and one Live Photo pair.","where":"landing preview, /demo, README","test":"cargo build && npm run build:site && node --test --test-name-pattern='@claim:sample-demo' site/tests/claims.test.mjs && node --test --test-name-pattern='@claim:sample-demo' site/tests/accessibility.test.mjs","sandbox":"fresh temporary workspace created by mfa demo; inspect signatures, manifest observations, and demo DOM"},
+  {"id":"archive-comparison","claim":"The audit classifies identical, changed, missing, unreadable, and archive-only paths.","where":"landing headline, README","test":"cargo build && node --test --test-name-pattern='@claim:archive-comparison' site/tests/claims.test.mjs","sandbox":"fresh source and archive trees with independently created files and a non-file archive path"},
+  {"id":"one-click-demo","claim":"The website shows a finished sample audit after one click.","where":"landing action","test":"npm run build:site && node --test --test-name-pattern='@claim:one-click-demo' site/tests/accessibility.test.mjs","sandbox":"fresh 390px browser context; activate the first-screen sample link and assert banner and counts"},
+  {"id":"manifest-content","claim":"The JSON audit report records each file path, byte count, SHA-256, result, and available media details.","where":"landing preview, README","test":"cargo build && node --test --test-name-pattern='@claim:manifest-content' site/tests/claims.test.mjs","sandbox":"fresh fixture; independently calculate the SHA-256 and byte size"},
+  {"id":"read-only-safety","claim":"An audit never writes into or replaces a source or archive file.","where":"landing first screen, README","test":"cargo build && node --test --test-name-pattern='@claim:read-only-safety' site/tests/claims.test.mjs","sandbox":"fresh source and archive trees; attempt new and existing output paths in both trees; snapshot every input file"},
+  {"id":"read-scope","claim":"The CLI reads media content from the source and archive folders chosen for an audit.","where":"Privacy","test":"cargo build && node --test --test-name-pattern='@claim:read-scope' site/tests/claims.test.mjs","sandbox":"fresh sibling folder with a sentinel media file; audit only source/archive and assert the sentinel is absent and unchanged"},
+  {"id":"media-observations","claim":"The report records available JPEG camera details, MOV codec and frame rate, sidecars, and upper-case Live Photo pairs.","where":"landing checks, README","test":"cargo build && node --test --test-name-pattern='@claim:media-observations' site/tests/claims.test.mjs","sandbox":"fresh mfa demo workspace with the shipped valid fixtures"},
+  {"id":"byte-not-perceptual","claim":"The audit checks byte equality, not picture quality.","where":"landing limits, README, Terms","test":"cargo build && node --test --test-name-pattern='@claim:byte-not-perceptual' site/tests/claims.test.mjs","sandbox":"two visually unchanged JPEG byte streams differing only by appended metadata; assert changed with no quality field"},
+  {"id":"relative-path-matching","claim":"By default the audit matches relative paths; --find-moved reports byte-identical archive files stored elsewhere.","where":"landing limits, README","test":"cargo build && node --test --test-name-pattern='@claim:relative-path-matching' site/tests/claims.test.mjs","sandbox":"same bytes at differently cased nested paths; compare default and --find-moved manifests"},
+  {"id":"include-all","claim":"The --include-all flag includes files outside the default media and sidecar extensions.","where":"README","test":"cargo build && node --test --test-name-pattern='@claim:include-all' site/tests/claims.test.mjs","sandbox":"fresh .txt-only source/archive pair; compare default and flag results"},
+  {"id":"json-automation","claim":"The CLI emits JSON summaries and returns exit 0 for a clean audit, 1 for differences, and 2 for errors.","where":"README","test":"cargo build && node --test --test-name-pattern='@claim:json-automation' site/tests/claims.test.mjs","sandbox":"fresh clean, missing-file, and invalid-input fixtures"},
+  {"id":"offline-local","claim":"The CLI has no account or network dependency.","where":"landing first screen, Privacy, README","test":"cargo build && node --test --test-name-pattern='@claim:offline-local' site/tests/claims.test.mjs","sandbox":"run mfa demo and a normal audit with socket and connect syscalls denied"},
+  {"id":"static-privacy","claim":"The static demo sends no third-party requests and stores no browser data.","where":"Privacy, README","test":"npm run build:site && node --test --test-name-pattern='@claim:static-privacy' site/tests/accessibility.test.mjs","sandbox":"fresh browser context; capture requests and browser storage during the complete demo flow"},
+  {"id":"source-install","claim":"Install the CLI from the public source checkout with cargo install --path .","where":"landing install, README","test":"cargo build && node --test --test-name-pattern='@claim:source-install' site/tests/claims.test.mjs","sandbox":"fresh Cargo install root; install the checkout and run mfa --help"},
+  {"id":"rust-msrv","claim":"Media Fidelity Audit requires Rust 1.85 or newer.","where":"landing install, README","test":"node --test --test-name-pattern='@claim:rust-msrv' site/tests/claims.test.mjs","sandbox":"locked check with the exact Rust 1.85.0 toolchain"},
+  {"id":"mit-license","claim":"Media Fidelity Audit is free under the MIT License.","where":"landing first screen, Terms, README","test":"node --test --test-name-pattern='@claim:mit-license' site/tests/claims.test.mjs","sandbox":"fresh checkout; inspect LICENSE and Cargo metadata"}
 ]

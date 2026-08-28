@@ -68,7 +68,7 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   assert.match(await page.locator('.route-status').textContent(), /Demo reset/);
   assert.equal(await page.locator('.diorama').count(), 0);
   await page.goBack();
-  assert.equal(await page.locator('h1').textContent(), 'Prove your archive kept every original.');
+  assert.equal(await page.locator('h1').textContent(), 'Check your archive against a source folder.');
   assert.equal(await page.locator('.diorama').evaluate(element => getComputedStyle(element).animationName), 'none');
   await context.close(); await browser.close();
 });
@@ -90,5 +90,24 @@ test('@claim:static-privacy demo sends no third-party request and stores no data
     databases: indexedDB.databases ? (await indexedDB.databases()).map(db => db.name) : [],
     serviceWorkers: (await navigator.serviceWorker?.getRegistrations() || []).length,
   })), { local: [], session: [], databases: [], serviceWorkers: 0 });
+  await context.close(); await browser.close();
+});
+
+test('@claim:one-click-demo and @claim:sample-demo show the isolated finished result immediately', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto(base, { waitUntil: 'networkidle' });
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await page.waitForURL('**/demo');
+  await assert.equal(await page.getByText('Demo — sample data, nothing is saved').count(), 1);
+  for (const item of [['Identical', '3'], ['Changed', '1'], ['Missing', '1'], ['Live Photo pairs', '1']]) {
+    const row = page.locator('.demo-summary dl div').filter({ hasText: item[0] });
+    assert.equal(await row.locator('dd').textContent(), item[1]);
+  }
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.goto(`${base}/?demo=1`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('h1').textContent(), 'Review a sample archive audit.');
+  assert.equal(await page.getByText('Demo — sample data, nothing is saved').count(), 1);
   await context.close(); await browser.close();
 });
