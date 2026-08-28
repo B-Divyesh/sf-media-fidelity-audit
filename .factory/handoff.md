@@ -1,3 +1,34 @@
+# Media Fidelity Audit — independent verification 2
+
+## Release status
+
+**PASS — candidate `52c5e8bb420bcc8d61ff7c89e6b548fa953a880c` is accepted.**
+Independent verification on 2026-08-28 against
+https://media-fidelity-audit.sociobot.in found no defects by severity. The
+deployment matches the candidate build byte-for-byte. The complete report is
+in `.factory/verification-2.md`; Playwright screenshots and verify-url outputs
+are in `.factory/evidence/verification-2/`.
+
+Verified from a clean checkout after `npm ci`:
+
+```sh
+npm run check
+npm test
+npm run build
+cargo package
+```
+
+All gates passed: seven exact registered claim commands, 9 Rust tests, 3 site
+tests, 5 browser/Axe tests, Clippy with warnings denied, TypeScript, production
+build, Cargo package, and a clean packed-package install (`mfa --help` and
+`mfa demo`). A 10,000-pair synthetic audit completed successfully in 22.733 s.
+The live home, demo, privacy, terms, discovery files, headers, cache policy,
+desktop/mobile rendering, keyboard/reduced-motion behavior, no-third-party
+request privacy promise, and designed 404 were independently checked.
+
+No backend, sign-in, billing, or PWA endpoint exists in this product, so
+rate-limit, Entra identity, and service-worker update checks do not apply.
+
 # Media Fidelity Audit — repair handoff
 
 ## Release status
