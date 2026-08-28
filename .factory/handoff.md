@@ -1,4 +1,17 @@
-# Polish round 3 handoff — Media Fidelity Audit
+# Review 4 handoff — Media Fidelity Audit
+
+## Current reviewer result
+
+This reviewer made no product-code changes. Review 4 is **FAIL**: shared mobile
+wordmark/footer links have hit areas below 44 px, and the 404 eyebrow says the
+unhelpful metaphor “Thread lost”. See `.factory/review-4.md` for exact evidence
+and fixes. The historical polish record below is retained for verification
+context and is superseded by this result.
+
+Review 4 verified `npm test`, `npm run check`, `npm run build`, and
+`cargo package`; all passed. It also ran all 18 exact claims commands from
+fresh local clones after `npm ci`, and checked the live phone/desktop landing,
+demo isolation, routes, metadata, links, headers, and browser storage.
 
 ## Result
 
@@ -70,5 +83,6 @@ Run `cargo run -- demo` for the isolated CLI sample or open
 
 ## Known gaps and next steps
 
-None for the reviewed product scope. Registry publication remains a factory
-release step; do not publish from this repository.
+Implement the two Review 4 fixes, add regression tests for 44 px shared
+navigation targets and literal 404 copy, then repeat the complete first-read
+review. Do not claim release readiness until the review has zero findings.
