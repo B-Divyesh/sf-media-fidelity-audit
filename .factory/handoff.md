@@ -92,6 +92,40 @@ Results:
 Evidence is in `.factory/evidence/local/`: `verify.json`, desktop/mobile
 screenshots, and the full `lighthouse.json`.
 
+## Clean checkout and live deployment
+
+Commit `35dbdb63bee289b1aed4fee8a0c4bceb4e486710` was pushed to `origin/main`.
+A new depth-one clone then passed `npm ci`, `npm run check`, the complete
+`npm test`, `npm run build`, and plain `cargo package` with no dirty-tree
+allowance.
+
+`/opt/fleet/lib/deploy-static.sh media-fidelity-audit dist/site` deployed the
+repair to the existing Central US Static Web App. Azure deployment id:
+`6c41bae0-24ef-42ee-ba7f-79a9e8d5ad0e`.
+
+Live verification at `https://media-fidelity-audit.sociobot.in`:
+
+* `/`, `/demo`, `/privacy`, `/terms`, `robots.txt`, and `sitemap.xml` return
+  HTTP 200. An unknown path returns the designed page with HTTP 404.
+* Root responses include the committed CSP, referrer, content-type,
+  permissions, frame, and HSTS policies. Hashed assets return
+  `Cache-Control: public, max-age=31536000, immutable`.
+* Factory `verify-url.sh` passes home and demo with zero console errors. Home
+  loaded in 708 ms and demo in 751 ms during the check.
+* The full Playwright/Axe suite passes again against the live origin at desktop,
+  390 px light, and 390 px dark, including keyboard, reduced motion, history,
+  privacy, and expected 404 response checks.
+* Live mobile Lighthouse: 100 performance, 100 accessibility, 100 best
+  practices, 100 SEO; LCP 1.4 s; CLS 0; 107 KiB transferred.
+* Live HTML, JS, CSS, and hero bytes match `dist/site` exactly. SHA-256:
+  HTML `3e8b81cbd40e6008e3ddc8b79fb06a92438d9d867ec653fd5f65a2f01eb19890`;
+  JS `aa6571a4da0189bc15e132b2dad4d5bea402c6c2fc038714ad166aed1aed389a`;
+  CSS `e0e311d1e5f49ad3d38ca9167cfbd368c1a76d4b5df7ffa247cd99f58a6af66e`;
+  hero `dc09b8266f9f2b60e40b1c80028d0792004031b1254e6447d6ff68db70d887bc`.
+
+Live screenshots, reports, and Lighthouse JSON are in
+`.factory/evidence/live/` and `.factory/evidence/live-demo/`.
+
 ## Run and deploy
 
 ```sh

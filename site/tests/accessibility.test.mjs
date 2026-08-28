@@ -5,10 +5,11 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 
 const port = 4173;
-const base = `http://127.0.0.1:${port}`;
+const base = process.env.SITE_URL || `http://127.0.0.1:${port}`;
 let server;
 
 before(async () => {
+  if (process.env.SITE_URL) return;
   server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', String(port)], { stdio: 'ignore' });
   for (let attempt = 0; attempt < 50; attempt += 1) {
     try { if ((await fetch(base)).ok) return; } catch {}
@@ -32,7 +33,8 @@ for (const profile of [
       const errors = [];
       page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
       page.on('pageerror', error => errors.push(error.message));
-      await page.goto(base + path, { waitUntil: 'networkidle' });
+      const response = await page.goto(base + path, { waitUntil: 'networkidle' });
+      if (process.env.SITE_URL && path === '/not-a-real-route') assert.equal(response?.status(), 404);
       assert.equal(await page.locator('html').getAttribute('lang'), 'en');
       assert.equal(await page.locator('main').count(), 1);
       assert.equal(await page.locator('h1').count(), 1);
@@ -42,7 +44,7 @@ for (const profile of [
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       const results = await new AxeBuilder({ page }).analyze();
       assert.deepEqual(results.violations.filter(v => ['serious', 'critical'].includes(v.impact)), []);
-      assert.deepEqual(errors, []);
+      if (path !== '/not-a-real-route') assert.deepEqual(errors, []);
       await page.close();
     }
     await context.close(); await browser.close();
