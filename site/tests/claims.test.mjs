@@ -12,6 +12,8 @@ const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex
 const tree = root => Object.fromEntries(readdirSync(root, { recursive: true }).filter(path => statSync(join(root, path)).isFile()).map(path => [path, hash(join(root, path))]));
 const temp = name => mkdtempSync(join(tmpdir(), `mfa-${name}-`));
 const audit = (source, archive, output, extra = []) => run(['audit', '--source', source, '--archive', archive, '--output', output, ...extra]);
+const demoWorkspace = output => output.match(/demo workspace: (.+)/)?.[1].trim();
+const normaliseDemoOutput = (output, workspace) => output.trim().replaceAll(workspace, '/tmp/mfa-demo…');
 
 test('bundled demo fixtures are valid media and produce the documented CLI result', () => {
   for (const path of ['examples/source/2025/birthday.jpg', 'examples/source/2025/beach-live.MOV', 'examples/source/2025/beach-live.HEIC']) assert.ok(readFileSync(path).length > 1000, `${path} is a real fixture`);
@@ -24,6 +26,57 @@ test('bundled demo fixtures are valid media and produce the documented CLI resul
   assert.ok(manifest.assets.find(asset => asset.relative_path.endsWith('birthday.jpg')).source.media.exif_sha256);
   assert.equal(manifest.assets.find(asset => asset.relative_path.endsWith('beach-live.MOV')).source.media.codec, 'avc1');
   rmSync(workspace, { recursive: true });
+});
+
+test('landing terminal recording is a current self-hosted SVG', () => {
+  const svg = readFileSync('site/public/mfa-demo-recording.svg', 'utf8');
+  const source = readFileSync('site/src/main.ts', 'utf8');
+  const built = readFileSync('dist/site/mfa-demo-recording.svg', 'utf8');
+  const result = run(['demo']);
+  assert.equal(result.status, 0, result.stderr);
+  const workspace = demoWorkspace(result.stdout);
+  assert.ok(workspace);
+  assert.match(source, /src="\/mfa-demo-recording\.svg"/);
+  assert.match(svg, /<svg[\s\S]+<title id="recording-title">Recorded output from mfa demo<\/title>/);
+  assert.equal(built, svg, 'the deployed asset matches the build-generated recording');
+  for (const line of ['$ mfa demo', ...normaliseDemoOutput(result.stdout, workspace).split('\n')]) assert.ok(svg.includes(line), `recording must show: ${line}`);
+  rmSync(workspace, { recursive: true });
+});
+
+test('@claim:cli-demo-isolation creates and prints a fresh temporary workspace without touching caller media', () => {
+  const root = temp('demo-isolation');
+  const emptyCaller = join(root, 'empty-caller');
+  mkdirSync(emptyCaller);
+  const emptyRun = spawnSync(binary, ['demo'], { cwd: emptyCaller, encoding: 'utf8' });
+  assert.equal(emptyRun.status, 0, emptyRun.stderr);
+  const emptyWorkspace = demoWorkspace(emptyRun.stdout);
+  const emptyManifest = emptyRun.stdout.match(/manifest: (.+sample-manifest\.json)/)?.[1].trim();
+  assert.ok(emptyWorkspace && emptyManifest);
+  assert.equal(readdirSync(emptyCaller).length, 0, 'the fresh caller directory remains empty');
+  assert.equal(emptyWorkspace.startsWith(emptyCaller), false, 'the demo workspace is outside the caller directory');
+  assert.equal(emptyManifest, join(emptyWorkspace, 'sample-manifest.json'));
+  assert.equal(JSON.parse(readFileSync(emptyManifest)).summary.source_files, 5, 'the manifest is the bundled sample');
+
+  const protectedCaller = join(root, 'caller-with-media');
+  mkdirSync(protectedCaller);
+  const sentinel = join(protectedCaller, 'media-to-protect.jpg');
+  writeFileSync(sentinel, 'caller media must remain private');
+  const before = tree(protectedCaller);
+  const trace = join(root, 'file-trace.txt');
+  const guard = join(root, 'trace-files.so');
+  const compile = spawnSync('gcc', ['-shared', '-fPIC', 'site/tests/trace-files.c', '-ldl', '-o', guard], { encoding: 'utf8' });
+  assert.equal(compile.status, 0, compile.stderr);
+  const protectedRun = spawnSync(binary, ['demo'], { cwd: protectedCaller, encoding: 'utf8', env: { ...process.env, LD_PRELOAD: guard, MFA_FILE_TRACE: trace } });
+  assert.equal(protectedRun.status, 0, protectedRun.stderr);
+  const protectedWorkspace = demoWorkspace(protectedRun.stdout);
+  assert.ok(protectedWorkspace);
+  assert.notEqual(protectedWorkspace, emptyWorkspace, 'each demo creates a distinct workspace');
+  assert.deepEqual(tree(protectedCaller), before, 'caller media is unchanged');
+  const traced = readFileSync(trace, 'utf8');
+  assert.equal(traced.includes(sentinel) || traced.includes('media-to-protect.jpg'), false, 'caller media is never opened');
+  rmSync(emptyWorkspace, { recursive: true });
+  rmSync(protectedWorkspace, { recursive: true });
+  rmSync(root, { recursive: true });
 });
 
 test('@claim:archive-comparison classifies changed, missing, unreadable, and archive-only files', () => {

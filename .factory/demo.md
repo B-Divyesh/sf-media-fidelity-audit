@@ -25,3 +25,6 @@ re-renders the bundled result, and **View install steps** opens the local
 installation directions. The first-screen action opens `?demo=1` directly.
 The shareable `/demo` route renders the same isolated sample without reading or
 writing browser storage.
+
+The landing page includes a self-hosted SVG recording generated from `mfa demo`
+during the site build. It shows the command and its bundled sample result.

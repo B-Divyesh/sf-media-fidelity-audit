@@ -45,3 +45,11 @@ test('first-screen demo uses the isolated query entry and report wording names S
   assert.match(source, /result, size, SHA-256 value/);
   assert.doesNotMatch(source, /exact-match code/);
 });
+
+test('landing names the report and limits sections and contains the terminal recording', () => {
+  const source = readFileSync('site/src/main.ts', 'utf8');
+  assert.match(source, /What the JSON audit report shows/);
+  assert.match(source, /What this audit does not check/);
+  assert.match(source, /src="\/mfa-demo-recording\.svg"/);
+  assert.doesNotMatch(source, /A report shows what happened|Clear limits/);
+});

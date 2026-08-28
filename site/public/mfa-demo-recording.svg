@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" role="img" aria-labelledby="recording-title recording-description">
+  <title id="recording-title">Recorded output from mfa demo</title>
+  <desc id="recording-description">$ mfa demo
+
+Demo — bundled sample data; your media is never read or changed.
+Media Fidelity Audit
+  5 source files · 3 identical · 1 changed · 1 missing · 0 moved · 0 archive-only · 0 unreadable
+  manifest: /tmp/mfa-demo…/sample-manifest.json
+  demo workspace: /tmp/mfa-demo…
+  delete this temporary folder when you are done reviewing it.</desc>
+  <rect width="1000" height="360" rx="4" fill="#172725"/>
+  <rect x="1" y="1" width="998" height="47" rx="4" fill="#213634" stroke="#f6d58b" stroke-opacity=".42"/>
+  <circle cx="28" cy="24" r="7" fill="#b84c35"/><circle cx="52" cy="24" r="7" fill="#b77916"/><circle cx="76" cy="24" r="7" fill="#176948"/>
+  <text x="105" y="30" fill="#f6f0e5" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">mfa demo — bundled sample</text>
+  <text x="34" y="86" fill="#f6d58b" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">$ mfa demo</text>
+  <text x="34" y="120" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16"> </text>
+  <text x="34" y="154" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">Demo — bundled sample data; your media is never read or changed.</text>
+  <text x="34" y="188" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">Media Fidelity Audit</text>
+  <text x="34" y="222" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">  5 source files · 3 identical · 1 changed · 1 missing · 0 moved · 0 archive-only · 0 unreadable</text>
+  <text x="34" y="256" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">  manifest: /tmp/mfa-demo…/sample-manifest.json</text>
+  <text x="34" y="290" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">  demo workspace: /tmp/mfa-demo…</text>
+  <text x="34" y="324" fill="#f5eddd" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="16">  delete this temporary folder when you are done reviewing it.</text>
+</svg>

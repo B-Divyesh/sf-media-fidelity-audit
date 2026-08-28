@@ -23,6 +23,11 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | Does not change either folder. | 5 |
 | Free under the MIT License. | 5 |
 | One source folder, one archive folder, one JSON audit report. | 10 |
+| Command-line demo | 2 |
+| See the audit command and its result. | 7 |
+| This recording uses the same bundled sample as mfa demo. | 10 |
+| Recorded from mfa demo during the site build. | 8 |
+| Swipe to read every line. | 5 |
 | Exact file match | 3 |
 | SHA-256 in the report | 4 |
 | Camera details | 2 |
@@ -31,7 +36,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | When the file contains them | 5 |
 | Live Photo media | 3 |
 | Videos and edit files | 4 |
-| A report shows what happened | 5 |
+| What the JSON audit report shows | 6 |
 | Find files that need attention. | 5 |
 | The JSON audit report lists each file’s result, size, SHA-256 value, and available camera or video details. | 17 |
 | Bundled family archive | 3 |
@@ -56,7 +61,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | Run your first audit. | 4 |
 | Requires Rust 1.85 or newer. | 5 |
 | Copy install command | 3 |
-| Clear limits | 2 |
+| What this audit does not check | 6 |
 | It checks bytes, not picture quality. | 6 |
 | Matching hashes prove matching bytes. | 5 |
 | They do not judge focus, colour, or composition. | 8 |
@@ -232,6 +237,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | Its MOV records codec and frame rate. | 7 |
 | The command prints the temporary path to its JSON manifest. | 10 |
 | Delete that workspace when finished. | 5 |
+| The landing page includes a self-hosted recording of the same mfa demo output. | 13 |
 | Open the one-click website demo at media-fidelity-audit.sociobot.in/?demo=1. | 7 |
 | This page stores nothing; the CLI demo uses a temporary folder. | 11 |
 | Install from the public source checkout | 6 |

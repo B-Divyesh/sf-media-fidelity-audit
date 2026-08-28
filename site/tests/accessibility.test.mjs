@@ -9,6 +9,8 @@ import AxeBuilder from '@axe-core/playwright';
 const port = 4173;
 const base = process.env.SITE_URL || `http://127.0.0.1:${port}`;
 let server;
+const demoWorkspace = output => output.match(/demo workspace: (.+)/)?.[1].trim();
+const normaliseDemoOutput = (output, workspace) => output.trim().replaceAll(workspace, '/tmp/mfa-demo…');
 
 before(async () => {
   if (process.env.SITE_URL) return;
@@ -104,6 +106,29 @@ test('@claim:static-privacy demo sends no third-party request and stores no data
     databases: indexedDB.databases ? (await indexedDB.databases()).map(db => db.name) : [],
     serviceWorkers: (await navigator.serviceWorker?.getRegistrations() || []).length,
   })), { local: [], session: [], databases: [], serviceWorkers: 0 });
+  await context.close(); await browser.close();
+});
+
+test('@claim:cli-demo-recording displays a self-hosted mfa demo recording with current command output', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(base, { waitUntil: 'networkidle' });
+  const recording = page.locator('img[src="/mfa-demo-recording.svg"]');
+  assert.equal(await recording.count(), 1);
+  assert.equal(await recording.isVisible(), true);
+  assert.equal(await recording.evaluate(image => image.complete && image.naturalWidth > 0), true);
+  const svg = await page.evaluate(async src => {
+    const response = await fetch(src);
+    if (!response.ok) throw new Error(`recording request failed: ${response.status}`);
+    return response.text();
+  }, await recording.getAttribute('src'));
+  const result = spawnSync(join(process.cwd(), 'target', 'debug', 'mfa'), ['demo'], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const workspace = demoWorkspace(result.stdout);
+  assert.ok(workspace);
+  for (const line of ['$ mfa demo', ...normaliseDemoOutput(result.stdout, workspace).split('\n')]) assert.ok(svg.includes(line), `recording must display: ${line}`);
+  rmSync(workspace, { recursive: true });
   await context.close(); await browser.close();
 });
 

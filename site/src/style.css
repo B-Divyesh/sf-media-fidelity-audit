@@ -48,6 +48,13 @@ h3 { font-size: 25px; }
 .diorama { margin: 0; text-align: center; animation: rise .24s ease-out; }
 .diorama img { width: min(100%, 500px); height: auto; filter: drop-shadow(0 15px 12px #362c1c2b); }
 figcaption { font: italic 15px var(--serif); color: var(--muted); margin-top: 3px; }
+.recording { display: grid; grid-template-columns: .7fr 1.3fr; gap: 52px; align-items: center; padding-top: 58px; padding-bottom: 64px; border-top: 1px solid var(--line); }
+.recording > div { max-width: 430px; }
+.recording > div > p:last-child { color: var(--muted); }
+.terminal-recording { margin: 0; max-width: 1000px; }
+.terminal-recording img { display: block; width: 100%; height: auto; box-shadow: 10px 10px 0 #b8a994; border: 1px solid #0e2831; }
+.terminal-recording figcaption { margin-top: 12px; }
+.mobile-scroll-note { display: none; }
 .proof-strip { background: var(--navy); color: #fffaf1; display: grid; grid-template-columns: repeat(4, 1fr); max-width: none !important; padding-top: 28px; padding-bottom: 28px; text-align: center; }
 .proof-strip div { border-right: 1px solid #90a4a5; }
 .proof-strip div:last-child { border: 0; }
@@ -117,6 +124,7 @@ footer p:last-child { display: flex; gap: 16px; flex-wrap: wrap; }
   .install { background: #26312f; }
   .terminal { background: #0f1615; box-shadow: 10px 10px 0 #485650; }
   .audit-card { background: #222d2b; color: var(--ink); }
+  .terminal-recording img { box-shadow: 10px 10px 0 #485650; }
   .copy { background: #e9e0d0; color: #17201f; }
   .command-row code { background: #222d2b; }
 }
@@ -131,7 +139,11 @@ footer p:last-child { display: flex; gap: 16px; flex-wrap: wrap; }
   .proof-strip { grid-template-columns: 1fr 1fr; gap: 22px; padding-left: 20px !important; padding-right: 20px !important; }
   .proof-strip div:nth-child(2) { border: 0; }
   .steps { padding-top: 74px; padding-bottom: 74px; }
-  .steps ol, .install, .sample, .demo-grid { grid-template-columns: 1fr; gap: 32px; }
+  .steps ol, .install, .sample, .recording, .demo-grid { grid-template-columns: 1fr; gap: 32px; }
+  .recording { padding-top: 52px; padding-bottom: 54px; }
+  .terminal-recording { overflow-x: auto; padding-bottom: 10px; }
+  .terminal-recording img { width: 760px; max-width: none; }
+  .mobile-scroll-note { display: inline; }
   .steps ol { margin-top: 35px; }
   .install { padding-top: 62px; padding-bottom: 62px; }
   .sample { padding-top: 72px; padding-bottom: 80px; }
