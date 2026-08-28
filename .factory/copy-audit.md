@@ -209,7 +209,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | How it works | 3 |
 | Limits | 1 |
 | Privacy | 1 |
-| 404 · Thread lost | 4 |
+| 404 error | 2 |
 | This archive path is missing. | 5 |
 | The page may have moved, but your media has not been touched. | 12 |
 | Return home | 2 |

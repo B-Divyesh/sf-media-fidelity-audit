@@ -10,6 +10,8 @@ test('deployment policy defines raw route shells, CSP, immutable assets, and a r
   assert.equal(config.responseOverrides['404'].statusCode, 404);
   const notFound = readFileSync('site/public/404.html', 'utf8');
   for (const marker of ['<h1>', 'Privacy', 'Terms', 'Source on GitHub', 'external', 'property="og:title"']) assert.match(notFound, new RegExp(marker));
+  assert.match(notFound, />404 error</);
+  assert.doesNotMatch(notFound, /Thread lost/);
 });
 
 test('metadata, discovery, and social assets are present', () => {
@@ -52,4 +54,13 @@ test('landing names the report and limits sections and contains the terminal rec
   assert.match(source, /What this audit does not check/);
   assert.match(source, /src="\/mfa-demo-recording\.svg"/);
   assert.doesNotMatch(source, /A report shows what happened|Clear limits/);
+});
+
+test('shared styles enforce 44px persistent navigation targets', () => {
+  const appStyles = readFileSync('site/src/style.css', 'utf8');
+  const notFoundStyles = readFileSync('site/public/404.css', 'utf8');
+  for (const styles of [appStyles, notFoundStyles]) {
+    assert.match(styles, /\.wordmark\s*\{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/s);
+    assert.match(styles, /footer a\s*\{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/s);
+  }
 });

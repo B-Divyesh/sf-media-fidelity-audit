@@ -1,1 +1,1 @@
-Check source and archive folders, then save a JSON audit report.
+Compare source and archive folders, then save a byte-level JSON audit.

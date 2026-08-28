@@ -56,6 +56,12 @@ for (const profile of [
       assert.ok(await page.locator('footer').isVisible());
       assert.equal(await page.locator('footer a[href="/privacy"]').count(), 1);
       assert.equal(await page.locator('footer a[href="/terms"]').count(), 1);
+      if (profile.viewport.width === 390) {
+        for (const control of await page.locator('.wordmark, footer a').all()) {
+          const box = await control.boundingBox();
+          assert.ok(box && box.width >= 44 && box.height >= 44, `persistent control must be at least 44px square: ${await control.textContent()} (${box?.width}x${box?.height})`);
+        }
+      }
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       const results = await new AxeBuilder({ page }).analyze();
       assert.deepEqual(results.violations.filter(v => ['serious', 'critical'].includes(v.impact)), []);
@@ -86,6 +92,19 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   await page.goBack();
   assert.equal(await page.locator('h1').textContent(), 'Check your archive against a source folder.');
   assert.equal(await page.locator('.diorama').evaluate(element => getComputedStyle(element).animationName), 'none');
+  await context.close(); await browser.close();
+});
+
+test('404 routes use a literal error label', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  for (const path of ['/404', '/not-a-real-route']) {
+    const page = await context.newPage();
+    await page.goto(base + path, { waitUntil: 'networkidle' });
+    assert.equal(await page.locator('.eyebrow').textContent(), '404 error');
+    assert.equal(await page.getByText('Thread lost').count(), 0);
+    await page.close();
+  }
   await context.close(); await browser.close();
 });
 
