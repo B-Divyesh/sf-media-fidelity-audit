@@ -30,7 +30,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .wordmark { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; font-weight: 800; text-decoration: none; letter-spacing: .06em; }
 .wordmark span { font-weight: 500; letter-spacing: 0; margin-left: 8px; }
 .site-header nav { display: flex; gap: 18px; font-size: 15px; }
-.site-header nav a { display: flex; align-items: center; min-height: 44px; }
+.site-header nav a { display: flex; align-items: center; min-width: 44px; min-height: 44px; justify-content: center; }
 .hero { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; min-height: 590px; gap: 34px; padding-top: 56px; padding-bottom: 60px; }
 .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 800; color: var(--terra); margin: 0 0 12px; }
 h1, h2, h3 { line-height: 1.06; margin: 0; font-family: var(--serif); }

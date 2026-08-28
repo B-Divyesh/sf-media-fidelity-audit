@@ -70,8 +70,9 @@ npm run build
 cargo package
 ```
 
-`npm run build` writes the static site to `dist/site/`. The factory deploys
-that directory; this repository does not change infrastructure or DNS.
+`npm run build` writes the complete production static site to `dist/site/`.
+The factory deploys that directory; this repository does not change
+infrastructure or DNS.
 
 The public claims and isolated tests are listed in
 [`.factory/claims.json`](.factory/claims.json). Demo details are in

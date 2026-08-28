@@ -105,7 +105,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | birthday.jpg — identical | 3 |
 | family.jpg — changed | 3 |
 | family.xmp — missing | 3 |
-| Run it yourself | 3 |
+| Run the sample audit locally | 5 |
 | Copy demo command | 3 |
 | Compare source folders with local media archives. | 7 |
 | Privacy | 1 |
@@ -145,7 +145,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | birthday.jpg — identical | 3 |
 | family.jpg — changed | 3 |
 | family.xmp — missing | 3 |
-| Run it yourself | 3 |
+| Run the sample audit locally | 5 |
 | Copy demo command | 3 |
 | Compare source folders with local media archives. | 7 |
 | Privacy | 1 |
@@ -210,8 +210,8 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | Limits | 1 |
 | Privacy | 1 |
 | 404 error | 2 |
-| This archive path is missing. | 5 |
-| The page may have moved, but your media has not been touched. | 12 |
+| This page was not found. | 5 |
+| Check the address or return to the home page. | 9 |
 | Return home | 2 |
 | Compare source folders with local media archives. | 7 |
 | Privacy | 1 |
@@ -255,7 +255,7 @@ Counts split on whitespace. Hyphenated words, flags, paths, and numbers count as
 | They do not assess visual quality. | 6 |
 | Default matching uses relative paths; use --find-moved when an archive may be reorganized. | 13 |
 | Develop and verify | 3 |
-| npm run build writes the static site to dist/site/. | 9 |
+| npm run build writes the complete production static site to dist/site/. | 11 |
 | The factory deploys that directory; this repository does not change infrastructure or DNS. | 13 |
 | The public claims and isolated tests are listed in .factory/claims.json. | 10 |
 | Demo details are in .factory/demo.md. | 5 |

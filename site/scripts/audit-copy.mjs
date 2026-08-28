@@ -97,7 +97,12 @@ try {
   assert.ok(readme.includes('Demo details are in .factory/demo.md.'), 'README demo-details sentence is absent');
   assert.equal(groups.flatMap(([, values]) => values).some(value => value.includes('exact-match code')), false, 'undefined exact-match code remains');
   assert.equal(groups.flatMap(([, values]) => values).some(value => value.includes('Thread lost')), false, 'metaphorical 404 label remains');
+  assert.equal(groups.flatMap(([, values]) => values).some(value => value.includes('Run it yourself')), false, 'context-free demo heading remains');
+  assert.equal(groups.flatMap(([, values]) => values).some(value => value.includes('archive path is missing') || value.includes('media has not been touched')), false, 'metaphorical or unlisted 404 reassurance remains');
+  for (const route of ['Demo query (`/?demo=1`)', 'Demo route (`/demo`)']) assert.ok(rendered.find(([name]) => name === route)[1].includes('Run the sample audit locally'), `${route} lacks the literal local-demo heading`);
   assert.ok(rendered.find(([name]) => name === 'Not found (`/404`)')[1].includes('404 error'), 'literal 404 label is absent');
+  assert.ok(rendered.find(([name]) => name === 'Not found (`/404`)')[1].includes('This page was not found.'), 'literal 404 heading is absent');
+  assert.ok(rendered.find(([name]) => name === 'Not found (`/404`)')[1].includes('Check the address or return to the home page.'), '404 recovery step is absent');
 
   const sections = rendered.map(([name, values]) => `## ${name}\n\n${table(values)}`).join('\n\n');
   const generated = `# Copy audit\n\nGenerated from the rendered production build and \`README.md\` by \`npm run audit:copy\`.\n\nCounts split on whitespace. Hyphenated words, flags, paths, and numbers count as one word. The automated gate fails for text over 22 words, banned words, omitted required sentences, or any drift from this file.\n\n${sections}\n\n## README headings and prose\n\n${table(readme)}\n\n## Terminology\n\n| Concept | Single term |\n| --- | --- |\n| Folder from the export | source folder |\n| Stored local folder | archive folder |\n| JSON output | JSON audit report |\n| Isolated bundled example | demo |\n| Paired still and motion media | Live Photo pair |\n`;

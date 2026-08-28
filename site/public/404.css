@@ -7,6 +7,7 @@ a { color: inherit; text-underline-offset: 4px; }
 .site-header, main, footer { max-width: 900px; margin: auto; padding: 24px; }
 .site-header, footer { display: flex; justify-content: space-between; gap: 24px; }
 .site-header a { min-height: 44px; display: flex; align-items: center; }
+.site-header nav a { min-width: 44px; justify-content: center; }
 .wordmark { min-width: 44px; min-height: 44px; font-weight: 800; letter-spacing: .06em; text-decoration: none; }
 .wordmark span { font-weight: 500; letter-spacing: 0; margin-left: 8px; }
 .site-header nav { display: flex; gap: 16px; font-size: 14px; }

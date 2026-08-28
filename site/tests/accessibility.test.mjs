@@ -57,7 +57,7 @@ for (const profile of [
       assert.equal(await page.locator('footer a[href="/privacy"]').count(), 1);
       assert.equal(await page.locator('footer a[href="/terms"]').count(), 1);
       if (profile.viewport.width === 390) {
-        for (const control of await page.locator('.wordmark, footer a').all()) {
+        for (const control of await page.locator('.site-header a, footer a').all()) {
           const box = await control.boundingBox();
           assert.ok(box && box.width >= 44 && box.height >= 44, `persistent control must be at least 44px square: ${await control.textContent()} (${box?.width}x${box?.height})`);
         }
@@ -79,9 +79,13 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   await page.goto(base);
   await page.keyboard.press('Tab');
   assert.equal(await page.locator(':focus').textContent(), 'Skip to main content');
-  await page.locator('a', { hasText: 'Try it with sample data' }).focus();
+  await page.getByRole('link', { name: 'Limits' }).click();
+  await page.waitForURL('**/#limits');
+  const limitsScroll = await page.evaluate(() => scrollY);
+  assert.ok(limitsScroll > 100, `limits section should be scrolled into view, received ${limitsScroll}`);
+  await page.getByRole('link', { name: 'Demo', exact: true }).focus();
   await page.keyboard.press('Enter');
-  await page.waitForURL('**/?demo=1');
+  await page.waitForURL('**/demo');
   assert.equal(await page.locator('h1').textContent(), 'Review a sample archive audit.');
   assert.equal(await page.locator(':focus').getAttribute('id'), 'page-title');
   await page.locator('[data-reset-demo]').focus();
@@ -90,8 +94,17 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   assert.equal(await page.locator('.demo-banner').evaluate(element => getComputedStyle(element).position), 'sticky');
   assert.equal(await page.locator('.diorama').count(), 0);
   await page.goBack();
+  await page.waitForURL('**/#limits');
+  await page.waitForFunction(() => document.activeElement?.id === 'page-title');
   assert.equal(await page.locator('h1').textContent(), 'Check your archive against a source folder.');
+  assert.equal(await page.locator(':focus').getAttribute('id'), 'page-title');
+  assert.ok(Math.abs((await page.evaluate(() => scrollY)) - limitsScroll) <= 2, 'Back should preserve the restored section scroll position');
   assert.equal(await page.locator('.diorama').evaluate(element => getComputedStyle(element).animationName), 'none');
+  await page.goForward();
+  await page.waitForURL('**/demo');
+  await page.waitForFunction(() => document.activeElement?.id === 'page-title');
+  assert.equal(await page.locator('h1').textContent(), 'Review a sample archive audit.');
+  assert.equal(await page.locator(':focus').getAttribute('id'), 'page-title');
   await context.close(); await browser.close();
 });
 
@@ -102,7 +115,11 @@ test('404 routes use a literal error label', async () => {
     const page = await context.newPage();
     await page.goto(base + path, { waitUntil: 'networkidle' });
     assert.equal(await page.locator('.eyebrow').textContent(), '404 error');
+    assert.equal(await page.locator('h1').textContent(), 'This page was not found.');
+    assert.equal(await page.getByText('Check the address or return to the home page.', { exact: true }).count(), 1);
     assert.equal(await page.getByText('Thread lost').count(), 0);
+    assert.equal(await page.getByText('This archive path is missing.').count(), 0);
+    assert.equal(await page.getByText(/media has not been touched/).count(), 0);
     await page.close();
   }
   await context.close(); await browser.close();
