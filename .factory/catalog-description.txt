@@ -1,1 +1,1 @@
-Check a media archive against a source folder and save an exact JSON audit report.
+Check a media archive against a source folder and save a JSON audit report.

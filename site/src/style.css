@@ -136,7 +136,7 @@ footer p:last-child { display: flex; gap: 16px; flex-wrap: wrap; }
   .install { padding-top: 62px; padding-bottom: 62px; }
   .sample { padding-top: 72px; padding-bottom: 80px; }
   .limits { padding-top: 65px; padding-bottom: 65px; }
-  .demo-banner { position: static; flex-wrap: wrap; justify-content: flex-start; }
+  .demo-banner { flex-wrap: wrap; justify-content: flex-start; }
   .demo-page { padding-top: 48px; }
   .demo-page .lede { margin-bottom: 18px; }
   .demo-summary { margin: 20px 0; transform: none; }

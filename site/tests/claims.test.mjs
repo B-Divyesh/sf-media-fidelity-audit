@@ -13,7 +13,7 @@ const tree = root => Object.fromEntries(readdirSync(root, { recursive: true }).f
 const temp = name => mkdtempSync(join(tmpdir(), `mfa-${name}-`));
 const audit = (source, archive, output, extra = []) => run(['audit', '--source', source, '--archive', archive, '--output', output, ...extra]);
 
-test('@claim:sample-demo valid bundled media produces the documented result', () => {
+test('bundled demo fixtures are valid media and produce the documented CLI result', () => {
   for (const path of ['examples/source/2025/birthday.jpg', 'examples/source/2025/beach-live.MOV', 'examples/source/2025/beach-live.HEIC']) assert.ok(readFileSync(path).length > 1000, `${path} is a real fixture`);
   assert.deepEqual([...readFileSync('examples/source/2025/birthday.jpg').subarray(0, 2)], [0xff, 0xd8]);
   assert.equal(readFileSync('examples/source/2025/beach-live.MOV').subarray(4, 8).toString(), 'ftyp');

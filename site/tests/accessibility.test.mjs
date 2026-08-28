@@ -1,6 +1,8 @@
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -28,7 +30,16 @@ for (const profile of [
   test(`all routes pass browser and accessibility checks at ${profile.viewport.width}px ${profile.colorScheme}`, async () => {
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext(profile);
-    for (const path of ['/', '/demo', '/privacy', '/terms', '/404', '/not-a-real-route']) {
+    const routeTitles = new Map([
+      ['/', 'Media Fidelity Audit — check a media archive'],
+      ['/?demo=1', 'Demo — Media Fidelity Audit'],
+      ['/demo', 'Demo — Media Fidelity Audit'],
+      ['/privacy', 'Privacy — Media Fidelity Audit'],
+      ['/terms', 'Terms — Media Fidelity Audit'],
+      ['/404', 'Page not found — Media Fidelity Audit'],
+      ['/not-a-real-route', 'Page not found — Media Fidelity Audit'],
+    ]);
+    for (const [path, title] of routeTitles) {
       const page = await context.newPage();
       const errors = [];
       page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -38,9 +49,11 @@ for (const profile of [
       assert.equal(await page.locator('html').getAttribute('lang'), 'en');
       assert.equal(await page.locator('main').count(), 1);
       assert.equal(await page.locator('h1').count(), 1);
-      assert.ok((await page.title()).includes('Media Fidelity Audit'));
+      assert.equal(await page.title(), title);
       assert.ok(await page.locator('header').isVisible());
       assert.ok(await page.locator('footer').isVisible());
+      assert.equal(await page.locator('footer a[href="/privacy"]').count(), 1);
+      assert.equal(await page.locator('footer a[href="/terms"]').count(), 1);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       const results = await new AxeBuilder({ page }).analyze();
       assert.deepEqual(results.violations.filter(v => ['serious', 'critical'].includes(v.impact)), []);
@@ -60,12 +73,13 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   assert.equal(await page.locator(':focus').textContent(), 'Skip to main content');
   await page.locator('a', { hasText: 'Try it with sample data' }).focus();
   await page.keyboard.press('Enter');
-  await page.waitForURL('**/demo');
+  await page.waitForURL('**/?demo=1');
   assert.equal(await page.locator('h1').textContent(), 'Review a sample archive audit.');
   assert.equal(await page.locator(':focus').getAttribute('id'), 'page-title');
   await page.locator('[data-reset-demo]').focus();
   await page.keyboard.press('Space');
   assert.match(await page.locator('.route-status').textContent(), /Demo reset/);
+  assert.equal(await page.locator('.demo-banner').evaluate(element => getComputedStyle(element).position), 'sticky');
   assert.equal(await page.locator('.diorama').count(), 0);
   await page.goBack();
   assert.equal(await page.locator('h1').textContent(), 'Check your archive against a source folder.');
@@ -99,15 +113,29 @@ test('@claim:one-click-demo and @claim:sample-demo show the isolated finished re
   const page = await context.newPage();
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
-  await page.waitForURL('**/demo');
+  await page.waitForURL('**/?demo=1');
   await assert.equal(await page.getByText('Demo — sample data, nothing is saved').count(), 1);
   for (const item of [['Identical', '3'], ['Changed', '1'], ['Missing', '1'], ['Live Photo pairs', '1']]) {
     const row = page.locator('.demo-summary dl div').filter({ hasText: item[0] });
     assert.equal(await row.locator('dd').textContent(), item[1]);
   }
+  const reset = page.getByRole('button', { name: 'Reset demo' });
+  assert.equal(await reset.isVisible(), true);
+  await reset.click();
+  assert.match(await page.locator('.route-status').textContent(), /Demo reset/);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  await page.goto(`${base}/?demo=1`, { waitUntil: 'networkidle' });
-  assert.equal(await page.locator('h1').textContent(), 'Review a sample archive audit.');
-  assert.equal(await page.getByText('Demo — sample data, nothing is saved').count(), 1);
+
+  for (const path of ['examples/source/2025/birthday.jpg', 'examples/source/2025/beach-live.MOV', 'examples/source/2025/beach-live.HEIC']) assert.ok(readFileSync(path).length > 1000, `${path} is a real fixture`);
+  assert.deepEqual([...readFileSync('examples/source/2025/birthday.jpg').subarray(0, 2)], [0xff, 0xd8]);
+  assert.equal(readFileSync('examples/source/2025/beach-live.MOV').subarray(4, 8).toString(), 'ftyp');
+  const result = spawnSync(join(process.cwd(), 'target', 'debug', 'mfa'), ['demo'], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const workspace = result.stdout.match(/demo workspace: (.+)/)?.[1].trim();
+  assert.ok(workspace);
+  const manifest = JSON.parse(readFileSync(join(workspace, 'sample-manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.summary, { source_files: 5, matched: 3, changed: 1, missing: 1, unreadable: 0, moved: 0, archive_only: 0, sidecars: 1, live_photo_pairs: 1, all_byte_identical: false });
+  assert.ok(manifest.assets.find(asset => asset.relative_path.endsWith('birthday.jpg')).source.media.exif_sha256);
+  assert.equal(manifest.assets.find(asset => asset.relative_path.endsWith('beach-live.MOV')).source.media.codec, 'avc1');
+  rmSync(workspace, { recursive: true });
   await context.close(); await browser.close();
 });

@@ -27,3 +27,21 @@ test('no paid offer or unpublished registry install remains', () => {
   assert.doesNotMatch(source, /Buy Pro|one-time Pro|cargo install media-fidelity-audit/);
   assert.match(source, /cargo install --path \./);
 });
+
+test('every registered claim has exactly one tagged test and a unique id', () => {
+  const claims = JSON.parse(readFileSync('.factory/claims.json', 'utf8'));
+  assert.equal(new Set(claims.map(claim => claim.id)).size, claims.length);
+  const tests = readFileSync('site/tests/claims.test.mjs', 'utf8') + readFileSync('site/tests/accessibility.test.mjs', 'utf8');
+  for (const claim of claims) {
+    assert.ok(claim.claim && claim.where && claim.test && claim.sandbox, `claim ${claim.id} is incomplete`);
+    assert.equal(tests.split(`@claim:${claim.id}`).length - 1, 1, `claim ${claim.id} must tag exactly one test`);
+    assert.match(claim.test, new RegExp(`@claim:${claim.id}`));
+  }
+});
+
+test('first-screen demo uses the isolated query entry and report wording names SHA-256', () => {
+  const source = readFileSync('site/src/main.ts', 'utf8');
+  assert.match(source, /href="\/\?demo=1">Try it with sample data/);
+  assert.match(source, /result, size, SHA-256 value/);
+  assert.doesNotMatch(source, /exact-match code/);
+});

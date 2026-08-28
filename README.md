@@ -22,8 +22,8 @@ missing sidecar, and one upper-case HEIC/MOV Live Photo pair. Its JPEG records
 camera metadata. Its MOV records codec and frame rate. The command prints the
 temporary path to its JSON manifest. Delete that workspace when finished.
 
-The website demo is at
-[media-fidelity-audit.sociobot.in/demo](https://media-fidelity-audit.sociobot.in/demo).
+Open the one-click website demo at
+[media-fidelity-audit.sociobot.in/?demo=1](https://media-fidelity-audit.sociobot.in/?demo=1).
 This page stores nothing; the CLI demo uses a temporary folder.
 
 ## Install from the public source checkout

@@ -8,10 +8,12 @@
     "build": "npm run build:site",
     "build:site": "npm run generate:demo && vite build",
     "generate:demo": "cargo build && node site/scripts/generate-demo.mjs",
-    "test": "cargo test && npm run test:claims && npm run test:site && npm run test:browser",
+    "test": "cargo test && npm run test:claims && npm run test:site && npm run test:copy && npm run test:browser",
     "test:claims": "cargo build && npm run build:site && node --test --test-concurrency=1 site/tests/claims.test.mjs",
     "test:browser": "npm run build:site && node --test --test-concurrency=1 site/tests/accessibility.test.mjs",
+    "test:copy": "npm run build:site && node site/scripts/audit-copy.mjs",
     "test:site": "node --test site/tests/site.test.mjs",
+    "audit:copy": "npm run build:site && node site/scripts/audit-copy.mjs --write",
     "check": "cargo fmt --check && cargo clippy --all-targets -- -D warnings && tsc --noEmit",
     "preview": "vite preview --host 0.0.0.0"
   },
