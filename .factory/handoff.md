@@ -2,7 +2,7 @@
 
 ## Result
 
-Repair candidate: `489a11357eb40b2bce4d84232cf4b60edb0ed3ef`, based on release
+Repair implementation: `489a11357eb40b2bce4d84232cf4b60edb0ed3ef`, based on release
 candidate `52c5e8bb420bcc8d61ff7c89e6b548fa953a880c` and every finding in
 review `2553488650273a7555e5357c6455c1eb5f690341`.
 
@@ -57,14 +57,25 @@ Claim registry results (all pass):
 
 ## Deployment and live recheck
 
-Push this repair to `origin/main`, then deploy with:
+Pushed repair documentation commit `a8c12059a5ca6317eb7cde13671d0033f7c3b3c8`
+to `origin/main`. Deployed `dist/site/` with
+`/opt/fleet/lib/deploy-static.sh media-fidelity-audit dist/site`; Azure Static
+Web Apps deployment id: `e0235633-296c-4f22-867e-6c449972fb49`.
 
-```sh
-/opt/fleet/lib/deploy-static.sh media-fidelity-audit dist/site
-```
+Cold live checks at https://media-fidelity-audit.sociobot.in passed:
 
-Live verification evidence and deployment id are appended after the deployment
-recheck. The production URL is https://media-fidelity-audit.sociobot.in.
+* Factory verification passed home (867 ms) and `/demo` (856 ms), each with
+  zero console errors, `lang=en`, one h1, main landmark, image alt text, and
+  named buttons. Evidence: `.factory/evidence/polish-1/home/verify.json` and
+  `.factory/evidence/polish-1/demo/verify.json`.
+* `/`, `/demo`, `/privacy`, and `/terms` returned 200; an unknown path returned
+  the designed common-shell 404 with HTTP 404. Raw `/demo`, `/privacy`, and
+  `/terms` have their own title, canonical, and OG title. Evidence:
+  `live-route-metadata.txt`, `live-404-check.txt`, and `live-404.png`.
+* Live Playwright/Axe checks passed mobile 390px, demo isolation/privacy, and
+  the direct `?demo=1` entry path. Axe serious/critical violations were zero.
+* Live screenshots are in `.factory/evidence/polish-1/home/` and
+  `.factory/evidence/polish-1/demo/`.
 
 ## Known gaps
 

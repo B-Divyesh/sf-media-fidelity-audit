@@ -1,0 +1,9 @@
+<meta property="og:title" content="Demo — Media Fidelity Audit"
+<link rel="canonical" href="https://media-fidelity-audit.sociobot.in/demo"
+<title>Demo — Media Fidelity Audit
+<meta property="og:title" content="Privacy — Media Fidelity Audit"
+<link rel="canonical" href="https://media-fidelity-audit.sociobot.in/privacy"
+<title>Privacy — Media Fidelity Audit
+<meta property="og:title" content="Terms — Media Fidelity Audit"
+<link rel="canonical" href="https://media-fidelity-audit.sociobot.in/terms"
+<title>Terms — Media Fidelity Audit
