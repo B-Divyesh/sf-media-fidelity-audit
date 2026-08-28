@@ -1,5 +1,26 @@
 # Media Fidelity Audit — handoff
 
+## Independent verification status (2026-08-28): **FAIL**
+
+Candidate `beaf30cfca8dfc4a22fb4a5bda6eea2d743db6fa` was independently tested
+against https://media-fidelity-audit.sociobot.in. The live HTML, JS, CSS, and
+hero asset exactly match the candidate build, but it is **not releasable**.
+
+Release blockers:
+
+* `.factory/claims.json` is absent, so the mandatory clean-demo claim tests do
+  not exist or run.
+* There is no one-click “Try it with sample data” flow, `mfa demo`, bundled
+  sample, isolated demo banner/reset, or `.factory/demo.md`.
+* `mfa audit --output archive/photo.jpg` overwrites that archive media file
+  with the manifest. This contradicts the read-only safety promise and can
+  destroy originals.
+
+The detailed evidence, passing checks, browser/privacy/rate-limit results, and
+all defects are in `.factory/verification.md`. Do not use the earlier
+“Delivered” claims below as an acceptance result; they are superseded by this
+verification.
+
 ## Delivered
 
 * `mfa`, a Rust/clap, read-only CLI at version 0.1.0. `mfa audit` recursively
