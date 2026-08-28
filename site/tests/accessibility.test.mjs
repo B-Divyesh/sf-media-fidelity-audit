@@ -81,6 +81,7 @@ test('keyboard, history, focus, demo reset, and reduced motion work', async () =
   assert.equal(await page.locator(':focus').textContent(), 'Skip to main content');
   await page.getByRole('link', { name: 'Limits' }).click();
   await page.waitForURL('**/#limits');
+  await page.waitForFunction(() => document.activeElement?.id === 'page-title');
   const limitsScroll = await page.evaluate(() => scrollY);
   assert.ok(limitsScroll > 100, `limits section should be scrolled into view, received ${limitsScroll}`);
   await page.getByRole('link', { name: 'Demo', exact: true }).focus();
